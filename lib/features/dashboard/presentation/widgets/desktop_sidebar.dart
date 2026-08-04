@@ -79,7 +79,7 @@ class DesktopSidebar extends StatelessWidget {
           _buildNavItem(
             tab: DashboardTab.fanCurve,
             icon: Icons.show_chart_rounded,
-            title: 'Đường Cong Quạt',
+            title: 'Quản Lý Profile & Fan Curve',
           ),
           _buildNavItem(
             tab: DashboardTab.rgbLighting,

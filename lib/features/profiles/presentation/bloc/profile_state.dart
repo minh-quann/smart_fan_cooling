@@ -39,6 +39,8 @@ class ProfileState extends Equatable {
     rgbMode: 'Breathing',
     rgbColor: AppColors.primary,
     isDefault: true,
+    isFixedSpeed: false,
+    fixedPwm: 40,
   );
 
   FanProfile get activeProfile {

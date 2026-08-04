@@ -14,6 +14,8 @@ class FanProfile extends Equatable {
   final String rgbMode; // 'Static', 'Breathing', 'Rainbow', 'ThermalSync'
   final Color rgbColor;
   final bool isDefault;
+  final bool isFixedSpeed; // Lock constant speed vs dynamic curve
+  final int fixedPwm; // Fixed PWM value when isFixedSpeed is true
 
   const FanProfile({
     required this.id,
@@ -26,6 +28,8 @@ class FanProfile extends Equatable {
     required this.rgbMode,
     required this.rgbColor,
     this.isDefault = false,
+    this.isFixedSpeed = false,
+    this.fixedPwm = 50,
   });
 
   FanProfile copyWith({
@@ -39,6 +43,8 @@ class FanProfile extends Equatable {
     String? rgbMode,
     Color? rgbColor,
     bool? isDefault,
+    bool? isFixedSpeed,
+    int? fixedPwm,
   }) {
     return FanProfile(
       id: id ?? this.id,
@@ -51,6 +57,8 @@ class FanProfile extends Equatable {
       rgbMode: rgbMode ?? this.rgbMode,
       rgbColor: rgbColor ?? this.rgbColor,
       isDefault: isDefault ?? this.isDefault,
+      isFixedSpeed: isFixedSpeed ?? this.isFixedSpeed,
+      fixedPwm: fixedPwm ?? this.fixedPwm,
     );
   }
 
@@ -66,5 +74,7 @@ class FanProfile extends Equatable {
         rgbMode,
         rgbColor,
         isDefault,
+        isFixedSpeed,
+        fixedPwm,
       ];
 }

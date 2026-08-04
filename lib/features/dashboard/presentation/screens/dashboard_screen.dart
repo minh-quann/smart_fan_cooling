@@ -9,10 +9,12 @@ import 'package:smart_fan_cooling/features/hardware_monitor/presentation/bloc/ha
 import 'package:smart_fan_cooling/features/hardware_monitor/presentation/widgets/hardware_card_widget.dart';
 import 'package:smart_fan_cooling/features/hardware_monitor/presentation/widgets/quick_fan_control_widget.dart';
 import 'package:smart_fan_cooling/features/hardware_monitor/presentation/widgets/rpm_gauge_widget.dart';
+import 'package:smart_fan_cooling/features/profiles/domain/models/fan_profile.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/bloc/profile_bloc.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/bloc/profile_event.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/bloc/profile_state.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/widgets/add_app_dialog.dart';
+import 'package:smart_fan_cooling/features/profiles/presentation/widgets/add_edit_profile_dialog.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/widgets/app_mapping_list_widget.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/widgets/fan_curve_editor_widget.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/widgets/profile_selector_widget.dart';
@@ -39,6 +41,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     context.read<HardwareBloc>().add(const StartHardwareMonitoringEvent());
     context.read<ProfileBloc>().add(const LoadProfilesEvent());
+  }
+
+  void _showAddProfileDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AddEditProfileDialog(
+        onSave: (newProfile) {
+          context.read<ProfileBloc>().add(SaveProfileEvent(newProfile));
+        },
+      ),
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context, FanProfile profile) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AddEditProfileDialog(
+        profileToEdit: profile,
+        onSave: (updatedProfile) {
+          context.read<ProfileBloc>().add(SaveProfileEvent(updatedProfile));
+        },
+      ),
+    );
   }
 
   @override
@@ -117,6 +142,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
                 context.read<HardwareBloc>().add(ChangePwmSpeedEvent(selectedProf.maxFanPwm));
               },
+              onAddProfilePressed: () => _showAddProfileDialog(context),
+              onEditProfilePressed: (p) => _showEditProfileDialog(context, p),
+              onDeleteProfilePressed: (id) => context.read<ProfileBloc>().add(DeleteProfileEvent(id)),
             ),
             const SizedBox(height: 20),
 
@@ -254,6 +282,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onProfileSelected: (id) {
             context.read<ProfileBloc>().add(SelectActiveProfileEvent(id));
           },
+          onAddProfilePressed: () => _showAddProfileDialog(context),
+          onEditProfilePressed: (p) => _showEditProfileDialog(context, p),
+          onDeleteProfilePressed: (id) => context.read<ProfileBloc>().add(DeleteProfileEvent(id)),
         ),
         const SizedBox(height: 20),
         FanCurveEditorWidget(profile: activeProfile),

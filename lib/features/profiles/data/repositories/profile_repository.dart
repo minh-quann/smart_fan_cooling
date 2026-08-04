@@ -23,6 +23,8 @@ class ProfileRepository {
       rgbMode: 'Breathing',
       rgbColor: AppColors.primary,
       isDefault: true,
+      isFixedSpeed: false,
+      fixedPwm: 40,
     ),
     const FanProfile(
       id: 'profile_balanced',
@@ -40,6 +42,8 @@ class ProfileRepository {
       ],
       rgbMode: 'Rainbow',
       rgbColor: AppColors.secondary,
+      isFixedSpeed: false,
+      fixedPwm: 60,
     ),
     const FanProfile(
       id: 'profile_gaming',
@@ -57,6 +61,8 @@ class ProfileRepository {
       ],
       rgbMode: 'ThermalSync',
       rgbColor: AppColors.accentRed,
+      isFixedSpeed: false,
+      fixedPwm: 100,
     ),
     const FanProfile(
       id: 'profile_adaptive',
@@ -74,6 +80,8 @@ class ProfileRepository {
       ],
       rgbMode: 'Wave',
       rgbColor: AppColors.accentPurple,
+      isFixedSpeed: false,
+      fixedPwm: 50,
     ),
   ];
 
