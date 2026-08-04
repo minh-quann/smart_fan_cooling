@@ -118,7 +118,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(20),
-                        child: _buildTabContent(context, profileState),
+                        child: RepaintBoundary(
+                          child: _buildTabContent(context, profileState),
+                        ),
                       ),
                     ),
                   ],
@@ -179,17 +181,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 final leftPanel = Column(
                   children: [
-                    RpmGaugeWidget(
-                      fanRpm: hwState.stats.fanRpm,
-                      pwmPercent: hwState.stats.pwmPercent,
-                      isConnected: hwState.stats.isFanConnected,
+                    RepaintBoundary(
+                      child: RpmGaugeWidget(
+                        fanRpm: hwState.stats.fanRpm,
+                        pwmPercent: hwState.stats.pwmPercent,
+                        isConnected: hwState.stats.isFanConnected,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    QuickFanControlWidget(
-                      currentPwm: hwState.stats.pwmPercent,
-                      onPwmChanged: (pwm) {
-                        context.read<HardwareBloc>().add(ChangePwmSpeedEvent(pwm));
-                      },
+                    RepaintBoundary(
+                      child: QuickFanControlWidget(
+                        currentPwm: hwState.stats.pwmPercent,
+                        onPwmChanged: (pwm) {
+                          context.read<HardwareBloc>().add(ChangePwmSpeedEvent(pwm));
+                        },
+                      ),
                     ),
                   ],
                 );

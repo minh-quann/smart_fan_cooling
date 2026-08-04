@@ -252,7 +252,7 @@ class _AddEditProfileDialogState extends State<AddEditProfileDialog> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     AppText.caption('MỨC CÔNG SUẤT PWM KHÓA CỐ ĐỊNH:'),
-                    AppText('$_fixedPwm% (~${((_fixedPwm / 100.0) * 2800).round()} RPM)', fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.secondary),
+                    AppText('$_fixedPwm% (~${(((_fixedPwm / 100.0) * 2800 / 10).round() * 10)} RPM)', fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.secondary),
                   ],
                 ),
                 SliderTheme(

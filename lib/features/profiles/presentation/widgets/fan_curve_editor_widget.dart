@@ -249,8 +249,8 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AppText.h2('ĐANG KHÓA QUẠT CỐ ĐỊNH Ở MỨC $_fixedPwm% PWM (~${((_fixedPwm / 100.0) * 2800).round()} RPM)'),
-                        AppText.caption('Quạt quay cố định mức $_fixedPwm% PWM (~${((_fixedPwm / 100.0) * 2800).round()} RPM) trên mọi dải nhiệt độ hệ thống.'),
+                        AppText.h2('ĐANG KHÓA QUẠT CỐ ĐỊNH Ở MỨC $_fixedPwm% PWM (~${(((_fixedPwm / 100.0) * 2800 / 10).round() * 10)} RPM)'),
+                        AppText.caption('Quạt quay cố định mức $_fixedPwm% PWM (~${(((_fixedPwm / 100.0) * 2800 / 10).round() * 10)} RPM) trên mọi dải nhiệt độ hệ thống.'),
                       ],
                     ),
                   ),

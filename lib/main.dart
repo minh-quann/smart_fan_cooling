@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
@@ -11,6 +12,16 @@ import 'package:smart_fan_cooling/features/rgb_lighting/presentation/bloc/rgb_bl
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const SmartFanApp());
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
 }
 
 class SmartFanApp extends StatelessWidget {
@@ -46,6 +57,7 @@ class SmartFanApp extends StatelessWidget {
         child: MaterialApp(
           title: 'Llano Smart Fan Control Hub',
           debugShowCheckedModeBanner: false,
+          scrollBehavior: AppScrollBehavior(),
           theme: ThemeData.dark().copyWith(
             scaffoldBackgroundColor: AppColors.background,
             primaryColor: AppColors.primary,

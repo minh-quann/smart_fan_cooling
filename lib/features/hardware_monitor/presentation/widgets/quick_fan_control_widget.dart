@@ -40,7 +40,7 @@ class QuickFanControlWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               AppText(
-                '$currentPwm% (~${((currentPwm / 100.0) * 2800).round()} RPM)',
+                '$currentPwm% (~${(((currentPwm / 100.0) * 2800 / 10).round() * 10)} RPM)',
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: AppColors.primary,
@@ -65,7 +65,7 @@ class QuickFanControlWidget extends StatelessWidget {
               min: 0,
               max: 100,
               divisions: 100,
-              label: '$currentPwm% (~${((currentPwm / 100.0) * 2800).round()} RPM)',
+              label: '$currentPwm% (~${(((currentPwm / 100.0) * 2800 / 10).round() * 10)} RPM)',
               onChanged: (val) => onPwmChanged(val.round()),
             ),
           ),

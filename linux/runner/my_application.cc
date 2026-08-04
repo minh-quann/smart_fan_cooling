@@ -14,6 +14,12 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+// Force GTK frame clock tick callback to render at native monitor refresh rate (240Hz)
+static gboolean on_frame_tick(GtkWidget* widget, GdkFrameClock* frame_clock, gpointer user_data) {
+  gtk_widget_queue_draw(widget);
+  return G_SOURCE_CONTINUE;
+}
+
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
@@ -57,6 +63,8 @@ static void my_application_activate(GApplication* application) {
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
       project, self->dart_entrypoint_arguments);
+  fl_dart_project_set_ui_thread_policy(
+      project, FL_UI_THREAD_POLICY_RUN_ON_SEPARATE_THREAD);
 
   FlView* view = fl_view_new(project);
   GdkRGBA background_color;
@@ -66,6 +74,9 @@ static void my_application_activate(GApplication* application) {
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
+
+  // Connect native GTK frame tick callback for high refresh rate monitor sync
+  gtk_widget_add_tick_callback(GTK_WIDGET(view), on_frame_tick, NULL, NULL);
 
   // Show the window when Flutter renders.
   // Requires the view to be realized so we can start rendering.
