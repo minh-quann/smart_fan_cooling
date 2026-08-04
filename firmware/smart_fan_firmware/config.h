@@ -86,7 +86,7 @@
 #define CHAR_RPM_UUID          "beb5483e-36e1-4688-b7f5-ea07361b26ad"
 #define CHAR_STATUS_UUID       "beb5483e-36e1-4688-b7f5-ea07361b26ae"
 #define CHAR_TEMP_UUID         "beb5483e-36e1-4688-b7f5-ea07361b26af"
-
+#define CHAR_WIFI_CONFIG_UUID  "beb5483e-36e1-4688-b7f5-ea07361b26b0"  // write, JSON string
 // ============================================================
 // LED effect modes (matches Flutter RgbBloc)
 // ============================================================

@@ -2,6 +2,8 @@
 #include "config.h"
 #include "fan_controller.h"
 #include "led_effects.h"
+#include "wifi_service.h"
+#include <ArduinoJson.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -94,13 +96,33 @@ class TempCallback : public BLECharacteristicCallbacks {
   }
 };
 
+class WiFiConfigCallback : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic* pChar) override {
+    std::string value = pChar->getValue();
+    if (value.length() > 0) {
+      JsonDocument doc;
+      DeserializationError err = deserializeJson(doc, value);
+      if (!err) {
+        const char* ssid = doc["ssid"];
+        const char* pass = doc["pass"];
+        if (ssid && pass) {
+          String newIP;
+          configureSTAWiFi(ssid, pass, newIP);
+        }
+      } else {
+        Serial.printf("BLE: WiFi config JSON parse error: %s\n", err.c_str());
+      }
+    }
+  }
+};
+
 void initBLE() {
   BLEDevice::init(BLE_DEVICE_NAME);
 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks());
 
-  BLEService* pService = pServer->createService(BLEUUID(SERVICE_UUID), 30);
+  BLEService* pService = pServer->createService(BLEUUID(SERVICE_UUID), 40);
 
   // Fan speed (write)
   BLECharacteristic* pFanSpeed = pService->createCharacteristic(
@@ -152,6 +174,12 @@ void initBLE() {
   );
   pTemp->setCallbacks(new TempCallback());
 
+  // WiFi Config (write JSON from app)
+  BLECharacteristic* pWiFiConfig = pService->createCharacteristic(
+    CHAR_WIFI_CONFIG_UUID, BLECharacteristic::PROPERTY_WRITE
+  );
+  pWiFiConfig->setCallbacks(new WiFiConfigCallback());
+
   pService->start();
 
   // Start advertising
@@ -185,7 +213,7 @@ void notifyRPM(uint16_t rpm) {
 void notifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn) {
   if (!_connected || !pCharStatus) return;
   // Pack status: [fanPercent, fanOn, ledMode, ledOn]
-  uint8_t status[4] = { fanPercent, fanOn ? 1 : 0, ledMode, ledOn ? 1 : 0 };
+  uint8_t status[4] = { fanPercent, (uint8_t)(fanOn ? 1 : 0), ledMode, (uint8_t)(ledOn ? 1 : 0) };
   pCharStatus->setValue(status, 4);
   pCharStatus->notify();
 }

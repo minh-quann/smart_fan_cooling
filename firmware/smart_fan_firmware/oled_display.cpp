@@ -23,6 +23,26 @@ void initDisplays() {
   I2C1.begin(PIN_OLED1_SDA, PIN_OLED1_SCL, 400000);
   I2C2.begin(PIN_OLED2_SDA, PIN_OLED2_SCL, 400000);
 
+  // Scan I2C2 bus to find OLED address
+  Serial.println("  I2C2 scan (GPIO17/18):");
+  uint8_t oled2Addr = 0;
+  for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
+    I2C2.beginTransmission(addr);
+    if (I2C2.endTransmission() == 0) {
+      Serial.printf("  Found device at 0x%02X\n", addr);
+      if (addr == 0x3C || addr == 0x3D) oled2Addr = addr;
+    }
+  }
+
+  // Scan I2C1 bus too
+  Serial.println("  I2C1 scan (GPIO8/9):");
+  for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
+    I2C1.beginTransmission(addr);
+    if (I2C1.endTransmission() == 0) {
+      Serial.printf("  Found device at 0x%02X\n", addr);
+    }
+  }
+
   // Init main 1.3" OLED (SH1106)
   if (oled1.begin(OLED_ADDR, true)) {
     oled1.clearDisplay();
@@ -33,14 +53,19 @@ void initDisplays() {
     oled1.display();
   }
 
-  // Init secondary 0.96" OLED (SSD1306)
-  if (oled2.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+  // Init secondary 0.96" OLED (SSD1306) - use detected address
+  uint8_t addr2 = oled2Addr ? oled2Addr : OLED_ADDR;
+  Serial.printf("  OLED2 using addr 0x%02X\n", addr2);
+  if (oled2.begin(SSD1306_SWITCHCAPVCC, addr2)) {
     oled2.clearDisplay();
     oled2.setTextColor(SSD1306_WHITE);
     oled2.setTextSize(1);
     oled2.setCursor(30, 28);
     oled2.print("System Info");
     oled2.display();
+    Serial.println("  OLED2 init OK!");
+  } else {
+    Serial.println("  OLED2 init FAILED!");
   }
 }
 
@@ -100,61 +125,54 @@ void updateSecondaryDisplay(float cpuTemp, float gpuTemp,
                             bool bleConnected, bool wifiConnected, const char* wifiIP) {
   oled2.clearDisplay();
 
-  // Title
+  // ---- Yellow zone (Y 0-15): Title ----
   oled2.setTextSize(1);
-  oled2.setCursor(0, 0);
+  oled2.setCursor(16, 4);
   oled2.print("SYSTEM MONITOR");
-  oled2.drawLine(0, 10, 127, 10, SSD1306_WHITE);
 
-  // CPU Temperature
-  oled2.setCursor(0, 14);
+  // ---- Blue zone (Y 16-63): Content ----
+
+  // CPU & GPU temps (Y=18)
+  oled2.setCursor(0, 18);
   oled2.print("CPU:");
   if (cpuTemp > 0) {
-    oled2.setCursor(30, 14);
     oled2.print(cpuTemp, 0);
     oled2.print("C");
   } else {
-    oled2.setCursor(30, 14);
     oled2.print("N/A");
   }
-
-  // GPU Temperature
-  oled2.setCursor(68, 14);
+  oled2.setCursor(68, 18);
   oled2.print("GPU:");
   if (gpuTemp > 0) {
-    oled2.setCursor(98, 14);
     oled2.print(gpuTemp, 0);
     oled2.print("C");
   } else {
-    oled2.setCursor(98, 14);
     oled2.print("N/A");
   }
 
-  // Connection status divider
-  oled2.drawLine(0, 26, 127, 26, SSD1306_WHITE);
+  // Divider
+  oled2.drawLine(0, 28, 127, 28, SSD1306_WHITE);
 
-  // BLE status
-  oled2.setCursor(0, 30);
-  oled2.print("BLE: ");
+  // Connection status (Y=32)
+  oled2.setCursor(0, 32);
+  oled2.print("BLE:");
   oled2.print(bleConnected ? "OK" : "--");
-
-  // WiFi status
-  oled2.setCursor(68, 30);
-  oled2.print("WS: ");
+  oled2.setCursor(68, 32);
+  oled2.print("WS:");
   oled2.print(wifiConnected ? "OK" : "--");
 
-  // WiFi IP address
+  // Divider
   oled2.drawLine(0, 42, 127, 42, SSD1306_WHITE);
-  oled2.setCursor(0, 46);
-  oled2.print("IP:");
-  oled2.setCursor(20, 46);
-  oled2.print(wifiIP);
 
-  // Port info
-  oled2.setCursor(0, 56);
-  oled2.print("WS:");
+  // IP + port (Y=46)
+  oled2.setCursor(0, 46);
+  oled2.print(wifiIP);
+  oled2.setCursor(98, 46);
+  oled2.print(":");
   oled2.print(WS_PORT);
-  oled2.setCursor(68, 56);
+
+  // mDNS name (Y=56)
+  oled2.setCursor(0, 56);
   oled2.print(MDNS_NAME);
   oled2.print(".local");
 

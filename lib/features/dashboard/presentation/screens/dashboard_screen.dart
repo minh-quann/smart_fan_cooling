@@ -24,6 +24,11 @@ import 'package:smart_fan_cooling/features/rgb_lighting/presentation/bloc/rgb_st
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/widgets/rgb_controls_widget.dart';
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/widgets/rgb_strip_preview_widget.dart';
 import 'package:smart_fan_cooling/features/settings/presentation/screens/settings_screen.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/screens/connection_screen.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_bloc.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_event.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_state.dart'
+    as conn_state;
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 import 'package:smart_fan_cooling/shared/widgets/glass_card.dart';
 
@@ -42,6 +47,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     context.read<HardwareBloc>().add(const StartHardwareMonitoringEvent());
     context.read<ProfileBloc>().add(const LoadProfilesEvent());
+    // Auto-reconnect to last saved device
+    context.read<ConnectionBloc>().add(AutoReconnectEvent());
+  }
+
+  void _showConnectionDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => const ConnectionScreen(),
+    );
   }
 
   void _showAddProfileDialog(BuildContext context) {
@@ -92,7 +106,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: BlocBuilder<ProfileBloc, ProfileState>(
+      body: BlocListener<HardwareBloc, HardwareState>(
+        listenWhen: (prev, curr) => curr.status == HardwareStatus.success && prev.stats != curr.stats,
+        listener: (context, hwState) {
+          // Auto-send CPU/GPU temps to ESP32 when connected
+          final connBloc = context.read<ConnectionBloc>();
+          if (connBloc.state.status == conn_state.ConnectionStatus.connected) {
+            connBloc.state.activeService?.sendTemperature(
+              hwState.stats.cpuTemp,
+              hwState.stats.gpuTemp,
+            );
+          }
+        },
+        child: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, profileState) {
           final activeProfile = profileState.activeProfile;
 
@@ -112,6 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     DesktopHeader(
                       activeProfileName: activeProfile.name,
                       activeProfileColor: activeProfile.themeColor,
+                      onConnectionTap: _showConnectionDialog,
                     ),
 
                     // Active Tab View Content
@@ -129,6 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           );
         },
+      ),
       ),
     );
   }

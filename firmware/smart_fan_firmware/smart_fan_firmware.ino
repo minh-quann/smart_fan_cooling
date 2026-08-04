@@ -20,25 +20,31 @@ static uint32_t lastLedUpdate = 0;
 
 void setup() {
   Serial.begin(115200);
-  delay(500);
+  while (!Serial && millis() < 3000) delay(10);
+  delay(1000);
   Serial.println("\n=== Llano Smart Fan v2.0 (BLE + WiFi) ===");
 
-  // Initialize all modules
+  Serial.println("[1/6] Fan...");
   initFan();
   Serial.println("[OK] Fan controller");
 
+  Serial.println("[2/6] Encoder...");
   initEncoder();
   Serial.println("[OK] Encoder + buttons");
 
+  Serial.println("[3/6] LEDs...");
   initLeds();
   Serial.println("[OK] LED strip");
 
+  Serial.println("[4/6] OLEDs...");
   initDisplays();
   Serial.println("[OK] Dual OLED displays");
 
+  Serial.println("[5/6] BLE...");
   initBLE();
   Serial.println("[OK] BLE service");
 
+  Serial.println("[6/6] WiFi...");
   initWiFiService();
   Serial.println("[OK] WiFi + WebSocket service");
 
@@ -100,14 +106,13 @@ void loop() {
 
   // ---- 5. Update OLED displays (every 100ms) ----
   if (now - lastDisplayUpdate >= DISPLAY_UPDATE_MS) {
-    // Pick best available temperature (WiFi or BLE, whichever has data)
     float cpuT = getWiFiCpuTemp() > 0 ? getWiFiCpuTemp() : getBLECpuTemp();
     float gpuT = getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
 
     updateMainDisplay(getFanRPM(), getFanPercent(), getLedMode(), isFanOn());
     updateSecondaryDisplay(cpuT, gpuT,
                            isBLEConnected(), isWiFiConnected(),
-                           getWiFiIP().c_str());
+                           isSTAConnected() ? getSTAIP().c_str() : getAPIP().c_str());
     lastDisplayUpdate = now;
   }
 

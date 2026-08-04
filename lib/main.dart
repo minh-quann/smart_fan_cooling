@@ -8,6 +8,7 @@ import 'package:smart_fan_cooling/features/hardware_monitor/presentation/bloc/ha
 import 'package:smart_fan_cooling/features/profiles/data/repositories/profile_repository.dart';
 import 'package:smart_fan_cooling/features/profiles/presentation/bloc/profile_bloc.dart';
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/bloc/rgb_bloc.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,9 @@ class SmartFanApp extends StatelessWidget {
           ),
           BlocProvider<RgbBloc>(
             create: (_) => RgbBloc(),
+          ),
+          BlocProvider<ConnectionBloc>(
+            create: (_) => ConnectionBloc(),
           ),
         ],
         child: MaterialApp(

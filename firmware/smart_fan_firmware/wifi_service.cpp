@@ -6,12 +6,19 @@
 #include <WebSocketsServer.h>
 #include <ESPmDNS.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
 static WebSocketsServer ws(WS_PORT);
 static bool _wsClientConnected = false;
 static String _ipAddr = "";
+static String _staIp = "";
+static String _apIp = "";
+static String _staSsid = "";
+static bool _staConnected = false;
 static float _cpuTemp = 0;
 static float _gpuTemp = 0;
+static Preferences preferences;
+
 
 // ---- Process incoming JSON command from app ----
 static void handleCommand(uint8_t clientNum, const char* payload) {
@@ -57,6 +64,38 @@ static void handleCommand(uint8_t clientNum, const char* payload) {
     _gpuTemp = doc["gpu"] | 0.0f;
     Serial.printf("WS: Temps CPU=%.1f GPU=%.1f\n", _cpuTemp, _gpuTemp);
   }
+  else if (strcmp(cmd, "wifi_config") == 0) {
+    const char* ssid = doc["ssid"];
+    const char* pass = doc["pass"];
+    if (ssid && pass) {
+      String newIP;
+      bool success = configureSTAWiFi(ssid, pass, newIP);
+      char resp[100];
+      if (success) {
+        snprintf(resp, sizeof(resp), "{\"cmd\":\"wifi_config\",\"status\":\"ok\",\"ip\":\"%s\"}", newIP.c_str());
+      } else {
+        snprintf(resp, sizeof(resp), "{\"cmd\":\"wifi_config\",\"status\":\"fail\"}");
+      }
+      ws.sendTXT(clientNum, resp);
+    }
+  }
+  else if (strcmp(cmd, "wifi_status") == 0) {
+    char resp[200];
+    snprintf(resp, sizeof(resp), "{\"cmd\":\"wifi_status\",\"sta_connected\":%s,\"sta_ip\":\"%s\",\"sta_ssid\":\"%s\",\"ap_ip\":\"%s\"}",
+             _staConnected ? "true" : "false", _staIp.c_str(), _staSsid.c_str(), _apIp.c_str());
+    ws.sendTXT(clientNum, resp);
+  }
+  else if (strcmp(cmd, "wifi_reset") == 0) {
+    preferences.begin("wifi", false);
+    preferences.clear();
+    preferences.end();
+    WiFi.disconnect();
+    _staConnected = false;
+    _staIp = "";
+    _staSsid = "";
+    _ipAddr = _apIp;
+    ws.sendTXT(clientNum, "{\"cmd\":\"wifi_reset\",\"status\":\"ok\"}");
+  }
 }
 
 // ---- WebSocket event handler ----
@@ -91,13 +130,22 @@ void initWiFiService() {
 
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID, WIFI_AP_PASS, WIFI_AP_CHANNEL, 0, WIFI_AP_MAX_CONN);
-  _ipAddr = WiFi.softAPIP().toString();
-  Serial.printf("WiFi AP: %s @ %s\n", apSSID, _ipAddr.c_str());
+  _apIp = WiFi.softAPIP().toString();
+  _ipAddr = _apIp;
+  Serial.printf("WiFi AP: %s @ %s\n", apSSID, _apIp.c_str());
 
-  // Optionally connect to home router (STA mode)
-  if (strlen(WIFI_STA_SSID) > 0) {
-    Serial.printf("WiFi STA: Connecting to %s...\n", WIFI_STA_SSID);
-    WiFi.begin(WIFI_STA_SSID, WIFI_STA_PASS);
+  // Load from NVS
+  preferences.begin("wifi", true);
+  String savedSSID = preferences.getString("ssid", "");
+  String savedPass = preferences.getString("pass", "");
+  preferences.end();
+
+  const char* targetSSID = savedSSID.length() > 0 ? savedSSID.c_str() : WIFI_STA_SSID;
+  const char* targetPass = savedSSID.length() > 0 ? savedPass.c_str() : WIFI_STA_PASS;
+
+  if (strlen(targetSSID) > 0) {
+    Serial.printf("WiFi STA: Connecting to %s...\n", targetSSID);
+    WiFi.begin(targetSSID, targetPass);
 
     uint32_t start = millis();
     while (WiFi.status() != WL_CONNECTED && (millis() - start) < WIFI_STA_TIMEOUT) {
@@ -105,10 +153,14 @@ void initWiFiService() {
     }
 
     if (WiFi.status() == WL_CONNECTED) {
-      _ipAddr = WiFi.localIP().toString();
-      Serial.printf("WiFi STA: Connected @ %s\n", _ipAddr.c_str());
+      _staIp = WiFi.localIP().toString();
+      _ipAddr = _staIp;
+      _staSsid = targetSSID;
+      _staConnected = true;
+      Serial.printf("WiFi STA: Connected @ %s\n", _staIp.c_str());
     } else {
       Serial.println("WiFi STA: Failed, using AP only");
+      WiFi.disconnect();
     }
   }
 
@@ -134,6 +186,57 @@ bool isWiFiConnected() {
 
 String getWiFiIP() {
   return _ipAddr;
+}
+
+bool isSTAConnected() {
+  return _staConnected;
+}
+
+String getSTAIP() {
+  return _staIp;
+}
+
+String getAPIP() {
+  return _apIp;
+}
+
+String getSTASSID() {
+  return _staSsid;
+}
+
+bool configureSTAWiFi(const char* ssid, const char* pass, String& outIP) {
+  preferences.begin("wifi", false);
+  preferences.putString("ssid", ssid);
+  preferences.putString("pass", pass);
+  preferences.end();
+
+  Serial.printf("WiFi STA: Connecting to new SSID %s...\n", ssid);
+  WiFi.disconnect();
+  delay(100);
+  WiFi.begin(ssid, pass);
+
+  uint32_t start = millis();
+  while (WiFi.status() != WL_CONNECTED && (millis() - start) < WIFI_STA_TIMEOUT) {
+    delay(100);
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    _staIp = WiFi.localIP().toString();
+    _ipAddr = _staIp;
+    _staSsid = ssid;
+    _staConnected = true;
+    outIP = _staIp;
+    Serial.printf("WiFi STA: Connected @ %s\n", _staIp.c_str());
+    return true;
+  } else {
+    Serial.println("WiFi STA: Failed to connect");
+    WiFi.disconnect();
+    _staConnected = false;
+    _staIp = "";
+    _staSsid = "";
+    _ipAddr = _apIp;
+    return false;
+  }
 }
 
 float getWiFiCpuTemp() {

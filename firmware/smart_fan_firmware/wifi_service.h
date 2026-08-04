@@ -6,6 +6,12 @@ void loopWiFiService();        // Call every loop() — handles WebSocket events
 bool isWiFiConnected();        // Any WebSocket client connected?
 String getWiFiIP();            // Current IP address (AP or STA)
 
+bool isSTAConnected();
+String getSTAIP();
+String getAPIP();
+String getSTASSID();
+bool configureSTAWiFi(const char* ssid, const char* pass, String& outIP);
+
 // Getters for values received from Flutter app via WiFi
 float getWiFiCpuTemp();
 float getWiFiGpuTemp();

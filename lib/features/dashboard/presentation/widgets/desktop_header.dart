@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_bloc.dart';
+import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_state.dart'
+    as conn;
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
 class DesktopHeader extends StatelessWidget {
   final String activeProfileName;
   final Color activeProfileColor;
-  final bool isHardwareConnected;
+  final VoidCallback? onConnectionTap;
 
   const DesktopHeader({
     super.key,
     required this.activeProfileName,
     required this.activeProfileColor,
-    this.isHardwareConnected = true,
+    this.onConnectionTap,
   });
 
   @override
@@ -103,40 +107,66 @@ class DesktopHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: ShapeDecoration(
-                    color: isHardwareConnected
-                        ? AppColors.primary.withValues(alpha: 0.12)
-                        : AppColors.statusOffline.withValues(alpha: 0.12),
-                    shape: RoundedSuperellipseBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      side: BorderSide(
-                        color: isHardwareConnected ? AppColors.primary : AppColors.statusOffline,
-                        width: 1.0,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isHardwareConnected ? AppColors.primary : AppColors.statusOffline,
+
+                // Connection status badge - reads from ConnectionBloc
+                BlocBuilder<ConnectionBloc, conn.ConnectionState>(
+                  builder: (context, connState) {
+                    final isConnected = connState.status == conn.ConnectionStatus.connected;
+                    final isScanning = connState.status == conn.ConnectionStatus.scanning;
+                    final isConnecting = connState.status == conn.ConnectionStatus.connecting;
+
+                    // Determine badge text and color
+                    String badgeText;
+                    Color badgeColor;
+                    IconData badgeIcon;
+
+                    if (isConnected) {
+                      final type = connState.connectionType == 'wifi' ? 'WIFI' : 'BLE';
+                      badgeText = 'ESP32 $type';
+                      badgeColor = AppColors.primary;
+                      badgeIcon = connState.connectionType == 'wifi'
+                          ? Icons.wifi_rounded
+                          : Icons.bluetooth_connected_rounded;
+                    } else if (isScanning || isConnecting) {
+                      badgeText = isScanning ? 'SCANNING...' : 'CONNECTING...';
+                      badgeColor = AppColors.secondary;
+                      badgeIcon = Icons.search_rounded;
+                    } else {
+                      badgeText = 'OFFLINE';
+                      badgeColor = AppColors.statusOffline;
+                      badgeIcon = Icons.bluetooth_disabled_rounded;
+                    }
+
+                    return GestureDetector(
+                      onTap: onConnectionTap,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: ShapeDecoration(
+                            color: badgeColor.withValues(alpha: 0.12),
+                            shape: RoundedSuperellipseBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              side: BorderSide(color: badgeColor, width: 1.0),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(badgeIcon, size: 13, color: badgeColor),
+                              const SizedBox(width: 5),
+                              AppText(
+                                badgeText,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: badgeColor,
+                                isMonospace: true,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 5),
-                      AppText(
-                        isHardwareConnected ? 'ESP32 ONLINE' : 'OFFLINE',
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: isHardwareConnected ? AppColors.primary : AppColors.statusOffline,
-                        isMonospace: true,
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),

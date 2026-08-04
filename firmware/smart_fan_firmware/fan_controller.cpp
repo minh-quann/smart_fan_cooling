@@ -13,9 +13,10 @@ static void IRAM_ATTR tachISR() {
 }
 
 void initFan() {
-  // Setup PWM via LEDC
-  ledcAttach(PIN_FAN_PWM, FAN_PWM_FREQ, FAN_PWM_RES);
-  ledcWrite(PIN_FAN_PWM, 0);
+  // Setup PWM via LEDC (old API for Arduino Core 2.x compatibility)
+  ledcSetup(FAN_PWM_CHANNEL, FAN_PWM_FREQ, FAN_PWM_RES);
+  ledcAttachPin(PIN_FAN_PWM, FAN_PWM_CHANNEL);
+  ledcWrite(FAN_PWM_CHANNEL, 0);
 
   // Setup tachometer interrupt
   pinMode(PIN_FAN_TACH, INPUT_PULLUP);
@@ -30,16 +31,16 @@ void setFanSpeed(uint8_t percent) {
 
   if (_fanOn && percent > 0) {
     uint8_t duty = map(percent, 0, 100, 0, 255);
-    ledcWrite(PIN_FAN_PWM, duty);
+    ledcWrite(FAN_PWM_CHANNEL, duty);
   } else {
-    ledcWrite(PIN_FAN_PWM, 0);
+    ledcWrite(FAN_PWM_CHANNEL, 0);
   }
 }
 
 void setFanOn(bool on) {
   _fanOn = on;
   if (!on) {
-    ledcWrite(PIN_FAN_PWM, 0);
+    ledcWrite(FAN_PWM_CHANNEL, 0);
   } else {
     setFanSpeed(_fanPercent);
   }

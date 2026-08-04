@@ -311,7 +311,7 @@ class HardwareMonitorService {
     return null;
   }
 
-  /// Read AVERAGE CPU Temperature from coretemp / k10temp / zenpower on Linux
+  /// Read CPU Package Temperature (Package id 0) from coretemp / k10temp on Linux
   Future<double> _readLinuxAverageCpuTemp() async {
     try {
       final hwmonDir = Directory('/sys/class/hwmon');
@@ -328,25 +328,17 @@ class HardwareMonitorService {
                   name.contains('zenpower') ||
                   name.contains('cpu_thermal') ||
                   name.contains('cpu')) {
-                final List<double> cpuTemps = [];
-                final tempFiles = entity.listSync().whereType<File>().where(
-                  (f) => f.path.contains('temp') && f.path.endsWith('_input'),
-                );
-
-                for (var tempFile in tempFiles) {
-                  final raw = await tempFile.readAsString();
+                // Read Package id 0 (temp1_input) — the overall CPU package temp
+                final packageFile = File('${entity.path}/temp1_input');
+                if (await packageFile.exists()) {
+                  final raw = await packageFile.readAsString();
                   final val = int.tryParse(raw.trim());
                   if (val != null && val > 0) {
                     double temp = val / 1000.0;
                     if (temp >= 25.0 && temp <= 115.0) {
-                      cpuTemps.add(temp);
+                      return temp;
                     }
                   }
-                }
-
-                if (cpuTemps.isNotEmpty) {
-                  double sum = cpuTemps.reduce((a, b) => a + b);
-                  return sum / cpuTemps.length;
                 }
               }
             }
