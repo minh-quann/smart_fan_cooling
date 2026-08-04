@@ -99,9 +99,10 @@ class ProfileSelectorWidget extends StatelessWidget {
     return GlassCard(
       onTap: () => onProfileSelected(p.id),
       backgroundColor: isSelected
-          ? p.themeColor.withValues(alpha: 0.15)
+          ? p.themeColor.withValues(alpha: 0.12)
           : AppColors.cardBg,
       borderColor: isSelected ? p.themeColor : AppColors.border,
+      borderRadius: 12,
       child: Stack(
         children: [
           Center(
@@ -110,14 +111,14 @@ class ProfileSelectorWidget extends StatelessWidget {
               children: [
                 Icon(
                   p.icon,
-                  size: 26,
+                  size: 24,
                   color: isSelected ? p.themeColor : AppColors.textMuted,
                 ),
                 const SizedBox(height: 6),
                 AppText(
                   p.name,
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
@@ -137,9 +138,10 @@ class ProfileSelectorWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: ShapeDecoration(
-                        color: p.themeColor.withValues(alpha: 0.2),
+                        color: p.themeColor.withValues(alpha: 0.15),
                         shape: RoundedSuperellipseBorder(
                           borderRadius: BorderRadius.circular(6),
+                          side: BorderSide(color: p.themeColor.withValues(alpha: 0.3)),
                         ),
                       ),
                       child: Builder(
@@ -148,9 +150,10 @@ class ProfileSelectorWidget extends StatelessWidget {
                           final int targetRpm = ((targetPwm / 100.0) * 2800).round();
                           return AppText(
                             p.isFixedSpeed ? 'Cố định $targetPwm% ($targetRpm RPM)' : 'Max $targetPwm% ($targetRpm RPM)',
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                             color: p.themeColor,
+                            isMonospace: true,
                           );
                         },
                       ),

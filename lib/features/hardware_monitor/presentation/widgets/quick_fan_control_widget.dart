@@ -27,7 +27,7 @@ class QuickFanControlWidget extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(Icons.speed_rounded, color: AppColors.secondary, size: 22),
+                    const Icon(Icons.speed_rounded, color: AppColors.primary, size: 22),
                     const SizedBox(width: 8),
                     Expanded(
                       child: AppText.h2(
@@ -41,24 +41,24 @@ class QuickFanControlWidget extends StatelessWidget {
               const SizedBox(width: 8),
               AppText(
                 '$currentPwm% (~${((currentPwm / 100.0) * 2800).round()} RPM)',
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w800,
-                color: AppColors.secondary,
+                color: AppColors.primary,
                 isMonospace: true,
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // Slider
+          // Technical Slider
           SliderTheme(
             data: SliderThemeData(
-              trackHeight: 8,
-              activeTrackColor: AppColors.secondary,
+              trackHeight: 6,
+              activeTrackColor: AppColors.primary,
               inactiveTrackColor: AppColors.surfaceLight,
-              thumbColor: AppColors.primary,
+              thumbColor: Colors.white,
               overlayColor: AppColors.primary.withValues(alpha: 0.2),
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             ),
             child: Slider(
               value: currentPwm.toDouble(),
@@ -71,7 +71,7 @@ class QuickFanControlWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Quick Preset Buttons with Wrap to prevent horizontal overflow
+          // Quick Preset Buttons
           Center(
             child: Wrap(
               spacing: 8,
@@ -96,7 +96,7 @@ class QuickFanControlWidget extends StatelessWidget {
     return AppButton(
       label: label,
       isOutlined: !isSelected,
-      backgroundColor: isSelected ? AppColors.secondary : null,
+      backgroundColor: isSelected ? AppColors.primary : null,
       textColor: isSelected ? Colors.black : AppColors.textPrimary,
       onPressed: () => onPwmChanged(pwm),
     );

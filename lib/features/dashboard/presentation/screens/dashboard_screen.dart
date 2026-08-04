@@ -23,6 +23,7 @@ import 'package:smart_fan_cooling/features/rgb_lighting/presentation/bloc/rgb_ev
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/bloc/rgb_state.dart';
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/widgets/rgb_controls_widget.dart';
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/widgets/rgb_strip_preview_widget.dart';
+import 'package:smart_fan_cooling/features/settings/presentation/screens/settings_screen.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 import 'package:smart_fan_cooling/shared/widgets/glass_card.dart';
 
@@ -62,6 +63,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onSave: (updatedProfile) {
           context.read<ProfileBloc>().add(SaveProfileEvent(updatedProfile));
         },
+      ),
+    );
+  }
+
+  Widget _buildMetricPill(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: ShapeDecoration(
+        color: AppColors.surfaceLight,
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(4),
+          side: const BorderSide(color: AppColors.border, width: 1.0),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppText(label, fontSize: 10.5, color: AppColors.textMuted, isMonospace: true),
+          const SizedBox(width: 4),
+          AppText(value, fontSize: 10.5, fontWeight: FontWeight.w800, color: color, isMonospace: true),
+        ],
       ),
     );
   }
@@ -121,6 +143,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return _buildAppProfileTab(context, profileState);
       case DashboardTab.systemInfo:
         return _buildSystemInfoTab(context);
+      case DashboardTab.settings:
+        return const SettingsScreen();
     }
   }
 
@@ -172,48 +196,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 final rightPanel = Column(
                   children: [
-                    _buildHardwareCardsRow(
-                      context,
-                      card1: HardwareCardWidget(
-                        title: 'Nhiệt Độ CPU (Trung Bình)',
-                        subTitle: hwState.stats.cpuName,
-                        valueText: '${hwState.stats.cpuTemp}',
-                        unitText: '°C',
-                        icon: Icons.memory_rounded,
-                        accentColor: AppColors.cpuColor,
-                        historyData: hwState.cpuTempHistory,
-                      ),
-                      card2: HardwareCardWidget(
-                        title: 'Nhiệt Độ GPU (Trung Bình)',
-                        subTitle: hwState.stats.gpuName,
-                        valueText: '${hwState.stats.gpuTemp}',
-                        unitText: '°C',
-                        icon: Icons.developer_board_rounded,
-                        accentColor: AppColors.gpuColor,
-                        historyData: hwState.gpuTempHistory,
-                      ),
+                    // CPU Card (Includes Temp, Speed/Clock, Usage Load, CPU Fan RPM & Power W)
+                    HardwareCardWidget(
+                      title: 'Nhiệt Độ Vi Xử Lý CPU',
+                      subTitle: hwState.stats.cpuName,
+                      valueText: '${hwState.stats.cpuTemp}',
+                      unitText: '°C',
+                      icon: Icons.memory_rounded,
+                      accentColor: AppColors.cpuColor,
+                      progressPercent: hwState.stats.cpuUsage,
+                      extraPills: [
+                        _buildMetricPill('Mức sử dụng:', '${hwState.stats.cpuUsage}%', AppColors.accentOrange),
+                        _buildMetricPill('Tốc độ Clock:', '${hwState.stats.cpuClock} GHz', AppColors.cpuColor),
+                        _buildMetricPill('Quạt CPU Laptop:', '${hwState.stats.cpuFanRpm} RPM', AppColors.primary),
+                        _buildMetricPill('Công suất tiêu thụ:', '${hwState.stats.cpuPowerW} W', AppColors.accentRed),
+                      ],
                     ),
                     const SizedBox(height: 16),
-                    _buildHardwareCardsRow(
-                      context,
-                      card1: HardwareCardWidget(
-                        title: 'Mức Sử Dụng CPU',
-                        subTitle: 'Clock ${hwState.stats.cpuClock} GHz',
-                        valueText: '${hwState.stats.cpuUsage}',
-                        unitText: '%',
-                        icon: Icons.speed_rounded,
-                        accentColor: AppColors.accentOrange,
-                        historyData: hwState.cpuTempHistory,
-                      ),
-                      card2: HardwareCardWidget(
-                        title: 'Mức Sử Dụng RAM',
-                        subTitle: 'DDR4/DDR5 System RAM',
-                        valueText: '${hwState.stats.ramUsage}',
-                        unitText: '%',
-                        icon: Icons.straighten_rounded,
-                        accentColor: AppColors.ramColor,
-                        historyData: hwState.gpuTempHistory,
-                      ),
+
+                    // GPU Card (Includes Temp, GPU Usage, GPU Fan RPM & Power W)
+                    HardwareCardWidget(
+                      title: 'Nhiệt Độ Card Đồ Họa GPU',
+                      subTitle: hwState.stats.gpuName,
+                      valueText: '${hwState.stats.gpuTemp}',
+                      unitText: '°C',
+                      icon: Icons.developer_board_rounded,
+                      accentColor: AppColors.gpuColor,
+                      progressPercent: hwState.stats.gpuUsage,
+                      extraPills: [
+                        _buildMetricPill('Mức sử dụng GPU:', '${hwState.stats.gpuUsage}%', AppColors.gpuColor),
+                        _buildMetricPill('Quạt GPU Laptop:', '${hwState.stats.gpuFanRpm} RPM', AppColors.primary),
+                        _buildMetricPill('Công suất tiêu thụ:', '${hwState.stats.gpuPowerW} W', AppColors.accentRed),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // RAM Card
+                    HardwareCardWidget(
+                      title: 'Mức Sử Dụng RAM Hệ Thống',
+                      subTitle: 'DDR4/DDR5 System RAM',
+                      valueText: '${hwState.stats.ramUsage}',
+                      unitText: '%',
+                      icon: Icons.straighten_rounded,
+                      accentColor: AppColors.ramColor,
+                      progressPercent: hwState.stats.ramUsage,
+                      extraPills: [
+                        _buildMetricPill('Bộ nhớ:', 'Đang dùng ${hwState.stats.ramUsage}%', AppColors.ramColor),
+                        _buildMetricPill('Băng thông:', 'High Performance', AppColors.accentPurple),
+                      ],
                     ),
                   ],
                 );
@@ -238,33 +268,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               },
             ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildHardwareCardsRow(
-    BuildContext context, {
-    required Widget card1,
-    required Widget card2,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 550) {
-          return Column(
-            children: [
-              card1,
-              const SizedBox(height: 16),
-              card2,
-            ],
-          );
-        }
-        return Row(
-          children: [
-            Expanded(child: card1),
-            const SizedBox(width: 16),
-            Expanded(child: card2),
           ],
         );
       },

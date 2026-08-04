@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
-enum DashboardTab { overview, fanCurve, rgbLighting, appProfile, systemInfo }
+enum DashboardTab { overview, fanCurve, rgbLighting, appProfile, systemInfo, settings }
 
 class DesktopSidebar extends StatelessWidget {
   final DashboardTab currentTab;
@@ -17,58 +17,70 @@ class DesktopSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 240,
+      width: 235,
       color: AppColors.sidebarBg,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Brand Logo
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: ShapeDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                  shape: RoundedSuperellipseBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  shadows: const [
-                    BoxShadow(
-                      color: Color(0x6010B981),
-                      blurRadius: 10,
+          // Industrial Cockpit Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: ShapeDecoration(
+                    color: AppColors.primary,
+                    shape: RoundedSuperellipseBorder(
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                  ],
+                  ),
+                  child: const Icon(
+                    Icons.cyclone_rounded,
+                    color: Colors.black,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.cyclone_rounded,
-                  color: Colors.black,
-                  size: 22,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        'LLANO SMART FAN',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      AppText(
+                        'SYSTEM CONTROL HUB',
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                        isMonospace: true,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText.h2('LLANO SMART', overflow: TextOverflow.ellipsis, maxLines: 1),
-                    AppText(
-                      'FAN CONTROL HUB',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          const Padding(
+            padding: EdgeInsets.only(left: 8, bottom: 8),
+            child: AppText(
+              'MENU QUẢN TRỊ',
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textMuted,
+              isMonospace: true,
+            ),
+          ),
 
           // Navigation Links
           _buildNavItem(
@@ -79,7 +91,7 @@ class DesktopSidebar extends StatelessWidget {
           _buildNavItem(
             tab: DashboardTab.fanCurve,
             icon: Icons.show_chart_rounded,
-            title: 'Quản Lý Profile & Fan Curve',
+            title: 'Profile & Fan Curve',
           ),
           _buildNavItem(
             tab: DashboardTab.rgbLighting,
@@ -89,36 +101,61 @@ class DesktopSidebar extends StatelessWidget {
           _buildNavItem(
             tab: DashboardTab.appProfile,
             icon: Icons.auto_mode_rounded,
-            title: 'Gán App Profile',
+            title: 'Gán App Auto-Switch',
           ),
           _buildNavItem(
             tab: DashboardTab.systemInfo,
             icon: Icons.memory_rounded,
             title: 'Thông Số Phần Cứng',
           ),
+          _buildNavItem(
+            tab: DashboardTab.settings,
+            icon: Icons.settings_rounded,
+            title: 'Thiết Lập Hệ Thống',
+          ),
 
           const Spacer(),
 
-          // System Info Card Footer
+          // Compact Status Footer
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: ShapeDecoration(
               color: AppColors.cardBg,
               shape: RoundedSuperellipseBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: AppColors.border),
+                borderRadius: BorderRadius.circular(6),
+                side: const BorderSide(color: AppColors.border, width: 1.0),
               ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.hub_rounded, color: AppColors.primary, size: 20),
-                const SizedBox(width: 10),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: ShapeDecoration(
+                    color: AppColors.primary,
+                    shape: RoundedSuperellipseBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AppText('ESP32-S3 Board', fontSize: 12, fontWeight: FontWeight.w700),
-                      AppText('Firmware v1.3.0', fontSize: 10, color: AppColors.textMuted),
+                      AppText(
+                        'ESP32-S3 BOARD',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        isMonospace: true,
+                      ),
+                      AppText(
+                        'Firmware v1.3.0',
+                        fontSize: 9.5,
+                        color: AppColors.textMuted,
+                        isMonospace: true,
+                      ),
                     ],
                   ),
                 ),
@@ -138,22 +175,21 @@ class DesktopSidebar extends StatelessWidget {
     final isSelected = currentTab == tab;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: InkWell(
         onTap: () => onTabChanged(tab),
-        customBorder: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        borderRadius: BorderRadius.circular(6),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: ShapeDecoration(
-            color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
-            shape: RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.surfaceLight : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border(
+              left: BorderSide(
                 color: isSelected ? AppColors.primary : Colors.transparent,
-                width: 1.5,
+                width: 3.5,
               ),
             ),
           ),
@@ -161,14 +197,14 @@ class DesktopSidebar extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                size: 20,
+                size: 18,
                 color: isSelected ? AppColors.primary : AppColors.textMuted,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: AppText(
                   title,
-                  fontSize: 13.5,
+                  fontSize: 12.5,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                   overflow: TextOverflow.ellipsis,

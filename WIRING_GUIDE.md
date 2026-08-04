@@ -1,6 +1,6 @@
-# 🛠️ TÀI LIỆU HƯỚNG DẪN HỆ THỐNG ĐIỀU KHIỂN QUẠT LLANO SMART (ULTRA-CLEAN 1.3" OLED MODE)
+# 🛠️ TÀI LIỆU HƯỚNG DẪN HỆ THỐNG ĐIỀU KHIỂN QUẠT LLANO SMART (DUAL OLED MODE)
 
-Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt tản nhiệt Laptop Llano Smart (Phiên bản **Ultra-Clean All-in-One 1.3" OLED - 27 Dây**), bao gồm: **Sơ đồ đấu nối phần cứng hoàn chỉnh**, **Kiến trúc Firmware ESP32-S3 (Arduino/ESP-IDF)** và **Ứng dụng điều khiển đa nền tảng (Flutter)**.
+Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt tản nhiệt Laptop Llano Smart (Phiên bản **Dual OLED - 31 Dây**), bao gồm: **Sơ đồ đấu nối phần cứng hoàn chỉnh**, **Kiến trúc Firmware ESP32-S3 (Arduino/ESP-IDF)** và **Ứng dụng điều khiển đa nền tảng (Flutter)**.
 
 ---
 
@@ -13,13 +13,14 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 3. **Bộ hạ áp & Phân phối nguồn:** Mạch hạ áp **XY3606** (12V → 5.2V / 5A, tích hợp Jack DC 5.5mm, nguồn 12V đấu trực tiếp).
 4. **Khối công suất điều tốc:** Module Dual MOSFET (HW-517).
 5. **Khối cách ly đếm xung:** Module Opto PC817 (3V-5V).
-6. **Khối hiển thị & Thao tác duy nhất (All-in-One):**
-   - 🖥️ **Màn hình duy nhất: OLED 1.3" + Con lăn Encoder + 2 Nút bấm tích hợp (CON, BAK):** Hiển thị tất cả thông số Nhiệt độ Laptop/Hệ thống, Tốc độ Quạt (RPM & % PWM), Chế độ LED; cho phép xoay núm chỉnh tốc độ, ấn núm PSH Bật/Tắt quạt, ấn nút CON Bật/Tắt LED, ấn nút BAK Đổi mode LED. *(Đã loại bỏ màn 0.96" thừa và công tắc cơ 12V)*.
+6. **Khối hiển thị & Thao tác chính:**
+   - 🖥️ **Màn hình chính: OLED 1.3" + Con lăn Encoder + 2 Nút bấm tích hợp (CON, BAK):** Hiển thị thông số Nhiệt độ Laptop/Hệ thống, Tốc độ Quạt (RPM & % PWM), Chế độ LED; cho phép xoay núm chỉnh tốc độ, ấn núm PSH Bật/Tắt quạt, ấn nút CON Bật/Tắt LED, ấn nút BAK Đổi mode LED.
+   - 🖥️ **Màn hình phụ: OLED 0.96" 4-Pin (I2C2):** Hiển thị thông số phụ / trạng thái kết nối hệ thống.
 7. **Khối hiệu ứng:** Dải LED RGB 3 dây (WS2812B / FastLED).
 
 ---
 
-### 📋 Bảng Tra Cứu Chân Cắm Chi Tiết 27 Dây (Pinout Mapping Table)
+### 📋 Bảng Tra Cứu Chân Cắm Chi Tiết 31 Dây (Pinout Mapping Table)
 
 | Module / Linh kiện | Chân trên Module | Chân kết nối trên Bo Đế ESP32-S3 (44-Pin) | STT Dây | Ghi chú & Chức năng |
 | :--- | :--- | :--- | :--- | :--- |
@@ -45,7 +46,7 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 | **Dải LED RGB WS2812B** | `🟠 +5V` | `5Vin` (ESP32) | **Dây 16** | Nguồn +5V nuôi dải LED RGB |
 | | `⚫ GND` | `GND 1` (Cọc Trái Trên) | **Dây 17** | Tiếp địa dải LED RGB |
 | | `🩵 DIN` | `GPIO 7` | **Dây 18** | Tín hiệu hiệu ứng màu FastLED |
-| **Màn Duy Nhất: OLED 1.3" + Encoder (9 Chân)** | `🟡 VCC` (Chân 9) | `3V3 Out` (ESP32) | **Dây 19** | Nguồn 3.3V nuôi Màn 1.3" & Encoder |
+| **Màn Chính: OLED 1.3" + Encoder (9 Chân)** | `🟡 VCC` (Chân 9) | `3V3 Out` (ESP32) | **Dây 19** | Nguồn 3.3V nuôi Màn 1.3" & Encoder |
 | | `⚫ GND` (Chân 8) | `GND 4` (Cọc Phải Dưới) | **Dây 20** | Tiếp địa Màn 1.3" & Encoder |
 | | `🟣 CON` (Chân 1) | `GPIO 12` | **Dây 21** | Nút CON phía dưới: Bật/Tắt LED RGB |
 | | `🟪 SDA` (Chân 2) | `GPIO 8` | **Dây 22** | Dữ liệu I2C1 Màn OLED 1.3" |
@@ -54,6 +55,10 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 | | `🟣 TRA` (Chân 5) | `GPIO 10` | **Dây 25** | Xoay Núm: Kênh A điều tốc 0-100% |
 | | `🟣 TRB` (Chân 6) | `GPIO 11` | **Dây 26** | Xoay Núm: Kênh B điều tốc 0-100% |
 | | `🟣 BAK` (Chân 7) | `GPIO 13` | **Dây 27** | Nút BAK phía trên: Đổi chế độ LED RGB |
+| **Màn Phụ: OLED 0.96" (4 Chân)** | `🟡 VCC` | `3V3 Out` (ESP32) | **Dây 28** | Nguồn 3.3V nuôi Màn OLED 0.96" |
+| | `⚫ GND` | `GND 4` (Cọc Phải Dưới) | **Dây 29** | Tiếp địa Màn OLED 0.96" |
+| | `🟪 SCL` (SCK) | `GPIO 18` | **Dây 30** | Clock I2C2 Màn OLED 0.96" |
+| | `🟪 SDA` | `GPIO 17` | **Dây 31** | Dữ liệu I2C2 Màn OLED 0.96" |
 
 ---
 

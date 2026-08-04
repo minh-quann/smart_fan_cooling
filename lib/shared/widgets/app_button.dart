@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
-/// AppButton is a reusable action button widget.
-/// Adheres strictly to Flutter rule #10: Always use RoundedSuperellipseBorder.
+/// AppButton is a reusable action button widget styled after precision industrial UI controls.
+/// Anti-AI Slop design system.
 class AppButton extends StatelessWidget {
   final String label;
   final IconData? icon;
@@ -24,7 +24,7 @@ class AppButton extends StatelessWidget {
     this.textColor,
     this.borderColor,
     this.isOutlined = false,
-    this.borderRadius = 12.0,
+    this.borderRadius = 10.0,
     this.padding,
   });
 
@@ -36,8 +36,8 @@ class AppButton extends StatelessWidget {
     final txtColor = textColor ??
         (isOutlined ? AppColors.textPrimary : Colors.black);
     final borderSide = BorderSide(
-      color: borderColor ?? (isOutlined ? AppColors.borderLight : bgColor),
-      width: 1.5,
+      color: borderColor ?? (isOutlined ? AppColors.border : bgColor),
+      width: 1.2,
     );
 
     return Material(
@@ -48,8 +48,10 @@ class AppButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           side: borderSide,
         ),
-        child: Ink(
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
           decoration: ShapeDecoration(
             color: bgColor,
             shape: RoundedSuperellipseBorder(
@@ -62,14 +64,14 @@ class AppButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 18, color: txtColor),
+                Icon(icon, size: 17, color: txtColor),
                 const SizedBox(width: 8),
               ],
               AppText(
                 label,
                 color: txtColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
               ),
             ],
           ),

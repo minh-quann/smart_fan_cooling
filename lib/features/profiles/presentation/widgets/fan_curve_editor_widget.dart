@@ -347,7 +347,7 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
                           border: Border.all(color: AppColors.borderLight, width: 1),
                         ),
                         minX: 20,
-                        maxX: 100,
+                        maxX: 110,
                         minY: 0,
                         maxY: 100,
                         lineBarsData: [
@@ -372,7 +372,7 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
                       for (int i = 0; i < _curvePoints.length; i++) ...[
                         () {
                           final point = _curvePoints[i];
-                          final double posX = leftMargin + ((point.temp - 20.0) / 80.0) * plotWidth;
+                          final double posX = leftMargin + ((point.temp - 20.0) / 90.0) * plotWidth;
                           final double posY = topMargin + (1.0 - (point.pwm / 100.0)) * plotHeight;
                           final bool isActive = _activePointIndex == i;
                           const double touchRadius = 24.0;
@@ -461,17 +461,21 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
 
           // Interactive Control Points Breakdown with Sliders (Dynamic Curve mode)
           if (!_isFixedSpeed) ...[
-            AppText.h2('TÙY CHỈNH TỪNG MỐC NHIỆT ĐỘ PROFILE "${widget.profile.name.toUpperCase()}"'),
+            AppText.h2('TÙY CHỈNH TỪNG MỐC NHIỆT ĐỘ PROFILE "${widget.profile.name.toUpperCase()}" (30°C - 100°C)'),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
-                final isNarrow = constraints.maxWidth < 650;
+                final isNarrow = constraints.maxWidth < 1100;
 
                 if (isNarrow) {
-                  return Column(
+                  final int cols = constraints.maxWidth < 650 ? 2 : 3;
+                  final double itemWidth = (constraints.maxWidth - (8 * (cols - 1))) / cols;
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 10,
                     children: _curvePoints.asMap().entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                      return SizedBox(
+                        width: itemWidth,
                         child: _buildPointControlCard(entry.key, entry.value),
                       );
                     }).toList(),
@@ -482,7 +486,7 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
                   children: _curvePoints.asMap().entries.map((entry) {
                     return Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 6),
                         child: _buildPointControlCard(entry.key, entry.value),
                       ),
                     );
@@ -504,7 +508,7 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
       onTap: () => setState(() => _activePointIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: ShapeDecoration(
           color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surfaceLight.withValues(alpha: 0.5),
           shape: RoundedSuperellipseBorder(
@@ -516,6 +520,7 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -527,23 +532,31 @@ class _FanCurveEditorWidgetState extends State<FanCurveEditorWidget> {
                   color: AppColors.textPrimary,
                 ),
                 AppText(
-                  '${point.pwm.toInt()}% (~${((point.pwm / 100.0) * 2800).round()} RPM)',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  '${point.pwm.toInt()}%',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
                   color: color,
                   isMonospace: true,
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
+            AppText(
+              '~${((point.pwm / 100.0) * 2800).round()} RPM',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMuted,
+              isMonospace: true,
+            ),
+            const SizedBox(height: 6),
             SliderTheme(
               data: SliderThemeData(
-                trackHeight: 6,
+                trackHeight: 5,
                 activeTrackColor: color,
                 inactiveTrackColor: AppColors.border,
                 thumbColor: Colors.white,
                 overlayColor: color.withValues(alpha: 0.2),
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
               ),
               child: Slider(
                 value: point.pwm.clamp(0, 100),

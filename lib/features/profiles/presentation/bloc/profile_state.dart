@@ -24,7 +24,7 @@ class ProfileState extends Equatable {
 
   static const _fallbackProfile = FanProfile(
     id: 'profile_silent',
-    name: 'Silent / Văn Phòng',
+    name: 'Silent',
     description: 'Quạt quay êm ái, tối đa 40% PWM, phù hợp làm việc văn phòng, xem phim',
     icon: Icons.volume_off_rounded,
     themeColor: AppColors.primary,

@@ -9,10 +9,14 @@ class HardwareStats extends Equatable {
   final double cpuUsage; // %
   final double gpuUsage; // %
   final double ramUsage; // %
-  final int fanRpm; // Real RPM from Opto PC817 (e.g. 0 to 4500 RPM)
+  final int fanRpm; // Real RPM from Opto PC817 (Llano Fan Hub)
   final int pwmPercent; // Target PWM duty cycle (0 to 100%)
   final double cpuClock; // GHz
   final double gpuClock; // MHz
+  final int cpuFanRpm; // Internal Laptop CPU Fan RPM
+  final int gpuFanRpm; // Internal Laptop GPU Fan RPM
+  final double cpuPowerW; // CPU Package Power Wattage (W)
+  final double gpuPowerW; // GPU Board Power Draw (W)
   final bool isFanConnected; // Connection status
 
   const HardwareStats({
@@ -27,6 +31,10 @@ class HardwareStats extends Equatable {
     required this.pwmPercent,
     required this.cpuClock,
     required this.gpuClock,
+    this.cpuFanRpm = 2400,
+    this.gpuFanRpm = 2550,
+    this.cpuPowerW = 35.0,
+    this.gpuPowerW = 65.0,
     this.isFanConnected = true,
   });
 
@@ -43,6 +51,10 @@ class HardwareStats extends Equatable {
       pwmPercent: 50,
       cpuClock: 3.4,
       gpuClock: 1450,
+      cpuFanRpm: 2400,
+      gpuFanRpm: 2550,
+      cpuPowerW: 35.0,
+      gpuPowerW: 65.0,
       isFanConnected: true,
     );
   }
@@ -59,6 +71,10 @@ class HardwareStats extends Equatable {
     int? pwmPercent,
     double? cpuClock,
     double? gpuClock,
+    int? cpuFanRpm,
+    int? gpuFanRpm,
+    double? cpuPowerW,
+    double? gpuPowerW,
     bool? isFanConnected,
   }) {
     return HardwareStats(
@@ -73,6 +89,10 @@ class HardwareStats extends Equatable {
       pwmPercent: pwmPercent ?? this.pwmPercent,
       cpuClock: cpuClock ?? this.cpuClock,
       gpuClock: gpuClock ?? this.gpuClock,
+      cpuFanRpm: cpuFanRpm ?? this.cpuFanRpm,
+      gpuFanRpm: gpuFanRpm ?? this.gpuFanRpm,
+      cpuPowerW: cpuPowerW ?? this.cpuPowerW,
+      gpuPowerW: gpuPowerW ?? this.gpuPowerW,
       isFanConnected: isFanConnected ?? this.isFanConnected,
     );
   }
@@ -90,6 +110,10 @@ class HardwareStats extends Equatable {
         pwmPercent,
         cpuClock,
         gpuClock,
+        cpuFanRpm,
+        gpuFanRpm,
+        cpuPowerW,
+        gpuPowerW,
         isFanConnected,
       ];
 }

@@ -28,30 +28,30 @@ class RpmGaugeWidget extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 10,
-                    height: 10,
+                    width: 9,
+                    height: 9,
                     decoration: ShapeDecoration(
                       color: isConnected ? AppColors.primary : AppColors.statusOffline,
                       shape: RoundedSuperellipseBorder(
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(4.5),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  AppText.h2('LLANO SMART FAN'),
+                  AppText.h2('LLANO SMART FAN HUB'),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: ShapeDecoration(
                   color: isConnected
-                      ? AppColors.primary.withValues(alpha: 0.15)
-                      : AppColors.statusOffline.withValues(alpha: 0.15),
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : AppColors.statusOffline.withValues(alpha: 0.12),
                   shape: RoundedSuperellipseBorder(
                     borderRadius: BorderRadius.circular(8),
                     side: BorderSide(
                       color: isConnected ? AppColors.primary : AppColors.statusOffline,
-                      width: 1,
+                      width: 1.2,
                     ),
                   ),
                 ),
@@ -59,73 +59,82 @@ class RpmGaugeWidget extends StatelessWidget {
                   isConnected ? 'ONLINE (ESP32-S3)' : 'OFFLINE',
                   color: isConnected ? AppColors.primary : AppColors.statusOffline,
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
 
-          // Custom Radial Gauge
+          // Custom Radial Gauge with smooth animation
           SizedBox(
             width: 200,
             height: 200,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomPaint(
-                  size: const Size(200, 200),
-                  painter: _GaugePainter(
-                    rpm: fanRpm,
-                    maxRpm: 2800,
-                    pwmPercent: pwmPercent,
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: fanRpm.toDouble()),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+              builder: (context, animRpm, child) {
+                return Stack(
+                  alignment: Alignment.center,
                   children: [
-                    const Icon(
-                      Icons.cyclone_rounded,
-                      color: AppColors.secondary,
-                      size: 28,
+                    CustomPaint(
+                      size: const Size(200, 200),
+                      painter: _GaugePainter(
+                        rpm: animRpm.toInt(),
+                        maxRpm: 2800,
+                        pwmPercent: pwmPercent,
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    AppText(
-                      '$fanRpm',
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      isMonospace: true,
-                    ),
-                    AppText.caption('RPM (TỐC ĐỘ THỰC)'),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: ShapeDecoration(
-                        color: AppColors.secondary.withValues(alpha: 0.2),
-                        shape: RoundedSuperellipseBorder(
-                          borderRadius: BorderRadius.circular(6),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.cyclone_rounded,
+                          color: AppColors.primary,
+                          size: 28,
                         ),
-                      ),
-                      child: AppText(
-                        'PWM $pwmPercent%',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.secondary,
-                      ),
+                        const SizedBox(height: 4),
+                        AppText(
+                          '${animRpm.round()}',
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          isMonospace: true,
+                        ),
+                        AppText.caption('RPM (TỐC ĐỘ THỰC)'),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: ShapeDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            shape: RoundedSuperellipseBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                            ),
+                          ),
+                          child: AppText(
+                            'PWM $pwmPercent%',
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                            isMonospace: true,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatChip('Mức Tải', '$pwmPercent%', AppColors.secondary),
-              _buildStatChip('Tần Số PWM', '25 kHz', AppColors.primary),
+              _buildStatChip('Mức Tải', '$pwmPercent%', AppColors.primary),
+              _buildStatChip('Tần Số PWM', '25 kHz', AppColors.secondary),
               _buildStatChip('Điện Áp', '12 VDC', AppColors.accentOrange),
             ],
           ),
@@ -141,9 +150,10 @@ class RpmGaugeWidget extends StatelessWidget {
         const SizedBox(height: 2),
         AppText(
           value,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
+          fontSize: 13.5,
+          fontWeight: FontWeight.w800,
           color: color,
+          isMonospace: true,
         ),
       ],
     );
@@ -169,12 +179,12 @@ class _GaugePainter extends CustomPainter {
     const startAngle = 135 * pi / 180;
     const sweepAngle = 270 * pi / 180;
 
-    // Background track
+    // Solid track
     final bgPaint = Paint()
       ..color = AppColors.surfaceLight
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 12;
+      ..strokeWidth = 10;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -184,22 +194,22 @@ class _GaugePainter extends CustomPainter {
       bgPaint,
     );
 
-    // Active progress track
+    // Active progress track - Sharp Electric Mint to Industrial Amber / Red on high speed
     double progressRatio = (rpm / maxRpm).clamp(0.0, 1.0);
     final activePaint = Paint()
       ..shader = SweepGradient(
         colors: const [
           AppColors.primary,
-          AppColors.secondary,
-          AppColors.accentPurple,
+          AppColors.primary,
+          AppColors.accentOrange,
           AppColors.accentRed,
         ],
-        stops: const [0.0, 0.4, 0.75, 1.0],
+        stops: const [0.0, 0.6, 0.85, 1.0],
         transform: GradientRotation(startAngle),
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 12;
+      ..strokeWidth = 10;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),

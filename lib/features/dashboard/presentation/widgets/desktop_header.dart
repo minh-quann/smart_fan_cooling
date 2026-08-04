@@ -17,12 +17,12 @@ class DesktopHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 64),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      constraints: const BoxConstraints(minHeight: 52),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
+          bottom: BorderSide(color: AppColors.border, width: 1.0),
         ),
       ),
       child: SingleChildScrollView(
@@ -30,29 +30,36 @@ class DesktopHeader extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Active Profile Badge Indicator
+            // Active Profile Status Indicator
             Row(
               children: [
-                AppText.caption('PROFILE ĐANG HOẠT ĐỘNG:'),
+                const AppText(
+                  'PROFILE HIỆN TẠI:',
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textMuted,
+                  isMonospace: true,
+                ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: ShapeDecoration(
-                    color: activeProfileColor.withValues(alpha: 0.15),
+                    color: activeProfileColor.withValues(alpha: 0.12),
                     shape: RoundedSuperellipseBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: activeProfileColor, width: 1.5),
+                      borderRadius: BorderRadius.circular(4),
+                      side: BorderSide(color: activeProfileColor, width: 1.0),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.bolt_rounded, size: 16, color: activeProfileColor),
-                      const SizedBox(width: 6),
+                      Icon(Icons.bolt_rounded, size: 14, color: activeProfileColor),
+                      const SizedBox(width: 4),
                       AppText(
                         activeProfileName.toUpperCase(),
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w800,
                         color: activeProfileColor,
+                        isMonospace: true,
                       ),
                     ],
                   ),
@@ -61,16 +68,16 @@ class DesktopHeader extends StatelessWidget {
             ),
             const SizedBox(width: 24),
 
-            // Hardware & Platform Connection Status Badges
+            // Hardware & Platform Badges
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: ShapeDecoration(
                     color: AppColors.surfaceLight,
                     shape: RoundedSuperellipseBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: AppColors.border),
+                      borderRadius: BorderRadius.circular(4),
+                      side: const BorderSide(color: AppColors.border, width: 1.0),
                     ),
                   ),
                   child: Row(
@@ -79,53 +86,54 @@ class DesktopHeader extends StatelessWidget {
                         Theme.of(context).platform == TargetPlatform.windows
                             ? Icons.window_rounded
                             : Icons.computer_rounded,
-                        size: 16,
+                        size: 13,
                         color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       AppText(
                         Theme.of(context).platform == TargetPlatform.windows
-                            ? 'WINDOWS MODE'
-                            : 'LINUX MODE',
-                        fontSize: 11,
+                            ? 'WINDOWS OS'
+                            : 'LINUX OS',
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textSecondary,
+                        isMonospace: true,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: ShapeDecoration(
                     color: isHardwareConnected
-                        ? AppColors.primary.withValues(alpha: 0.15)
-                        : AppColors.statusOffline.withValues(alpha: 0.15),
+                        ? AppColors.primary.withValues(alpha: 0.12)
+                        : AppColors.statusOffline.withValues(alpha: 0.12),
                     shape: RoundedSuperellipseBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(4),
                       side: BorderSide(
                         color: isHardwareConnected ? AppColors.primary : AppColors.statusOffline,
+                        width: 1.0,
                       ),
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 8,
-                        height: 8,
-                        decoration: ShapeDecoration(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
                           color: isHardwareConnected ? AppColors.primary : AppColors.statusOffline,
-                          shape: RoundedSuperellipseBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       AppText(
-                        isHardwareConnected ? 'ESP32 CONNECTED' : 'DISCONNECTED',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        isHardwareConnected ? 'ESP32 ONLINE' : 'OFFLINE',
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
                         color: isHardwareConnected ? AppColors.primary : AppColors.statusOffline,
+                        isMonospace: true,
                       ),
                     ],
                   ),

@@ -31,21 +31,30 @@ class HardwareBloc extends Bloc<HardwareEvent, HardwareState> {
     HardwareStatsUpdatedEvent event,
     Emitter<HardwareState> emit,
   ) {
-    // Keep max 20 history data points for fl_chart line graphs
-    final newCpuHistory = List<double>.from(state.cpuTempHistory)..add(event.stats.cpuTemp);
-    if (newCpuHistory.length > 20) newCpuHistory.removeAt(0);
+    const int maxPoints = 20;
 
-    final newGpuHistory = List<double>.from(state.gpuTempHistory)..add(event.stats.gpuTemp);
-    if (newGpuHistory.length > 20) newGpuHistory.removeAt(0);
+    final newCpuTempHistory = List<double>.from(state.cpuTempHistory)..add(event.stats.cpuTemp);
+    if (newCpuTempHistory.length > maxPoints) newCpuTempHistory.removeAt(0);
+
+    final newGpuTempHistory = List<double>.from(state.gpuTempHistory)..add(event.stats.gpuTemp);
+    if (newGpuTempHistory.length > maxPoints) newGpuTempHistory.removeAt(0);
+
+    final newCpuUsageHistory = List<double>.from(state.cpuUsageHistory)..add(event.stats.cpuUsage);
+    if (newCpuUsageHistory.length > maxPoints) newCpuUsageHistory.removeAt(0);
+
+    final newRamUsageHistory = List<double>.from(state.ramUsageHistory)..add(event.stats.ramUsage);
+    if (newRamUsageHistory.length > maxPoints) newRamUsageHistory.removeAt(0);
 
     final newFanHistory = List<double>.from(state.fanRpmHistory)..add(event.stats.fanRpm.toDouble());
-    if (newFanHistory.length > 20) newFanHistory.removeAt(0);
+    if (newFanHistory.length > maxPoints) newFanHistory.removeAt(0);
 
     emit(state.copyWith(
       status: HardwareStatus.success,
       stats: event.stats,
-      cpuTempHistory: newCpuHistory,
-      gpuTempHistory: newGpuHistory,
+      cpuTempHistory: newCpuTempHistory,
+      gpuTempHistory: newGpuTempHistory,
+      cpuUsageHistory: newCpuUsageHistory,
+      ramUsageHistory: newRamUsageHistory,
       fanRpmHistory: newFanHistory,
     ));
   }
