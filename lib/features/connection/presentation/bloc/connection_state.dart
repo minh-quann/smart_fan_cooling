@@ -27,6 +27,7 @@ class ConnectionState {
   final ConnectionStatus status;
   final List<DiscoveredDevice> bleDevices;
   final List<DiscoveredDevice> wifiDevices;
+  final List<DiscoveredDevice> usbDevices;
   final DeviceService? activeService;
   final DeviceStatus? deviceStatus;
   final String? connectionType;
@@ -36,6 +37,7 @@ class ConnectionState {
     this.status = ConnectionStatus.disconnected,
     this.bleDevices = const [],
     this.wifiDevices = const [],
+    this.usbDevices = const [],
     this.activeService,
     this.deviceStatus,
     this.connectionType,
@@ -46,6 +48,7 @@ class ConnectionState {
     ConnectionStatus? status,
     List<DiscoveredDevice>? bleDevices,
     List<DiscoveredDevice>? wifiDevices,
+    List<DiscoveredDevice>? usbDevices,
     DeviceService? activeService,
     DeviceStatus? deviceStatus,
     String? connectionType,
@@ -55,6 +58,7 @@ class ConnectionState {
       status: status ?? this.status,
       bleDevices: bleDevices ?? this.bleDevices,
       wifiDevices: wifiDevices ?? this.wifiDevices,
+      usbDevices: usbDevices ?? this.usbDevices,
       activeService: activeService ?? this.activeService,
       deviceStatus: deviceStatus ?? this.deviceStatus,
       connectionType: connectionType ?? this.connectionType,

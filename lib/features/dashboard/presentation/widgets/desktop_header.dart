@@ -121,12 +121,18 @@ class DesktopHeader extends StatelessWidget {
                     IconData badgeIcon;
 
                     if (isConnected) {
-                      final type = connState.connectionType == 'wifi' ? 'WIFI' : 'BLE';
+                      final type = connState.connectionType == 'wifi'
+                          ? 'WIFI'
+                          : connState.connectionType == 'usb'
+                              ? 'USB'
+                              : 'BLE';
                       badgeText = 'ESP32 $type';
                       badgeColor = AppColors.primary;
                       badgeIcon = connState.connectionType == 'wifi'
                           ? Icons.wifi_rounded
-                          : Icons.bluetooth_connected_rounded;
+                          : connState.connectionType == 'usb'
+                              ? Icons.usb_rounded
+                              : Icons.bluetooth_connected_rounded;
                     } else if (isScanning || isConnecting) {
                       badgeText = isScanning ? 'SCANNING...' : 'CONNECTING...';
                       badgeColor = AppColors.secondary;

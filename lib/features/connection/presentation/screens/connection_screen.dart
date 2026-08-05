@@ -187,6 +187,9 @@ class _ConnectionScreenState extends State<ConnectionScreen>
 
   Widget _buildConnectedView(bloc_state.ConnectionState state) {
     final isBle = state.connectionType == 'ble';
+    final isUsb = state.connectionType == 'usb';
+    final connectionLabel = isUsb ? 'USB Serial' : isBle ? 'Bluetooth LE' : 'WiFi WebSocket';
+    final connectionIcon = isUsb ? Icons.usb_rounded : isBle ? Icons.bluetooth_connected_rounded : Icons.wifi_rounded;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -213,7 +216,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                     ),
                   ),
                   child: Icon(
-                    isBle ? Icons.bluetooth_connected_rounded : Icons.wifi_rounded,
+                    connectionIcon,
                     color: AppColors.primary,
                     size: 24,
                   ),
@@ -230,7 +233,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                         color: AppColors.textPrimary,
                       ),
                       AppText(
-                        isBle ? 'Bluetooth LE' : 'WiFi WebSocket',
+                        connectionLabel,
                         fontSize: 11,
                         color: AppColors.primary,
                         isMonospace: true,
@@ -303,10 +306,18 @@ class _ConnectionScreenState extends State<ConnectionScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // USB section (highest priority — shown first)
+          if (state.usbDevices.isNotEmpty) ...[
+            _buildSectionHeader(Icons.usb_rounded, 'USB Serial', const Color(0xFF4CAF50)),
+            const SizedBox(height: 8),
+            ...state.usbDevices.map((d) => _buildDeviceTile(d, 'usb', state.status)),
+            const SizedBox(height: 16),
+          ],
+
           // WiFi section (always show AP option)
           _buildSectionHeader(Icons.wifi_rounded, 'WiFi', AppColors.secondary),
           const SizedBox(height: 8),
-          ...state.wifiDevices.map((d) => _buildDeviceTile(d, false, state.status)),
+          ...state.wifiDevices.map((d) => _buildDeviceTile(d, 'wifi', state.status)),
           if (!hasWifi)
             _buildDeviceTile(
               const bloc_state.DiscoveredDevice(
@@ -315,7 +326,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                 ipAddress: '192.168.4.1',
                 type: 'wifi',
               ),
-              false,
+              'wifi',
               state.status,
             ),
           const SizedBox(height: 16),
@@ -328,7 +339,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
           ),
           const SizedBox(height: 8),
           if (hasBle)
-            ...state.bleDevices.map((d) => _buildDeviceTile(d, true, state.status))
+            ...state.bleDevices.map((d) => _buildDeviceTile(d, 'ble', state.status))
           else if (state.status == bloc_state.ConnectionStatus.scanning)
             _buildEmptyHint('Đang tìm thiết bị BLE...')
           else
@@ -360,11 +371,13 @@ class _ConnectionScreenState extends State<ConnectionScreen>
 
   Widget _buildDeviceTile(
     bloc_state.DiscoveredDevice device,
-    bool isBle,
+    String deviceType,
     bloc_state.ConnectionStatus status,
   ) {
     final isConnecting = status == bloc_state.ConnectionStatus.connecting;
-    final color = isBle ? const Color(0xFF5B8DEF) : AppColors.secondary;
+    final isBle = deviceType == 'ble';
+    final isUsb = deviceType == 'usb';
+    final color = isUsb ? const Color(0xFF4CAF50) : isBle ? const Color(0xFF5B8DEF) : AppColors.secondary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -375,7 +388,11 @@ class _ConnectionScreenState extends State<ConnectionScreen>
               ? null
               : () {
                   context.read<ConnectionBloc>().add(StopScanEvent());
-                  if (isBle) {
+                  if (isUsb) {
+                    context.read<ConnectionBloc>().add(
+                          ConnectUsbEvent(device.id),
+                        );
+                  } else if (isBle) {
                     context.read<ConnectionBloc>().add(
                           ConnectBleEvent(BluetoothDevice.fromId(device.id)),
                         );
@@ -410,7 +427,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                     ),
                   ),
                   child: Icon(
-                    isBle ? Icons.bluetooth_rounded : Icons.wifi_rounded,
+                    isUsb ? Icons.usb_rounded : isBle ? Icons.bluetooth_rounded : Icons.wifi_rounded,
                     color: color,
                     size: 16,
                   ),
@@ -430,7 +447,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                       AppText(
                         isBle
                             ? '${device.rssi} dBm'
-                            : device.ipAddress,
+                            : isUsb ? device.id : device.ipAddress,
                         fontSize: 10,
                         color: AppColors.textMuted,
                         isMonospace: true,

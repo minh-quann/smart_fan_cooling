@@ -27,6 +27,12 @@ class ConnectWifiEvent extends ConnectionEvent {
   ConnectWifiEvent(this.wsUrl);
 }
 
+class ConnectUsbEvent extends ConnectionEvent {
+  final String portName;
+
+  ConnectUsbEvent(this.portName);
+}
+
 class DisconnectEvent extends ConnectionEvent {}
 
 /// Triggered on app start — tries reconnecting to last saved device

@@ -1,7 +1,7 @@
 // ============================================================
 // Llano Smart Fan - ESP32-S3 Firmware
 // Controls: Fan PWM, RGB LED, Dual OLED, Rotary Encoder
-// Comms: BLE + WiFi WebSocket (dual transport)
+// Comms: USB Serial + BLE + WiFi WebSocket (triple transport)
 // Board: YD-ESP32-S3 (N16R8) + 44-Pin Terminal Adapter
 // ============================================================
 
@@ -12,6 +12,7 @@
 #include "oled_display.h"
 #include "ble_service.h"
 #include "wifi_service.h"
+#include "usb_serial_service.h"
 
 // Timing trackers
 static uint32_t lastDisplayUpdate = 0;
@@ -22,31 +23,35 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 3000) delay(10);
   delay(1000);
-  Serial.println("\n=== Llano Smart Fan v2.0 (BLE + WiFi) ===");
+  Serial.println("\n=== Llano Smart Fan v2.1 (USB + BLE + WiFi) ===");
 
-  Serial.println("[1/6] Fan...");
+  Serial.println("[1/7] Fan...");
   initFan();
   Serial.println("[OK] Fan controller");
 
-  Serial.println("[2/6] Encoder...");
+  Serial.println("[2/7] Encoder...");
   initEncoder();
   Serial.println("[OK] Encoder + buttons");
 
-  Serial.println("[3/6] LEDs...");
+  Serial.println("[3/7] LEDs...");
   initLeds();
   Serial.println("[OK] LED strip");
 
-  Serial.println("[4/6] OLEDs...");
+  Serial.println("[4/7] OLEDs...");
   initDisplays();
   Serial.println("[OK] Dual OLED displays");
 
-  Serial.println("[5/6] BLE...");
+  Serial.println("[5/7] BLE...");
   initBLE();
   Serial.println("[OK] BLE service");
 
-  Serial.println("[6/6] WiFi...");
+  Serial.println("[6/7] WiFi...");
   initWiFiService();
   Serial.println("[OK] WiFi + WebSocket service");
+
+  Serial.println("[7/7] USB Serial...");
+  initUSBSerial();
+  Serial.println("[OK] USB Serial service");
 
   // Default state: fan ON at 30%, LED rainbow
   setFanOn(true);
@@ -60,7 +65,8 @@ void setup() {
 void loop() {
   uint32_t now = millis();
 
-  // ---- 0. Handle WiFi WebSocket events ----
+  // ---- 0. Handle USB Serial + WiFi WebSocket events ----
+  loopUSBSerial();
   loopWiFiService();
 
   // ---- 1. Read encoder for speed adjustment ----
@@ -106,8 +112,11 @@ void loop() {
 
   // ---- 5. Update OLED displays (every 100ms) ----
   if (now - lastDisplayUpdate >= DISPLAY_UPDATE_MS) {
-    float cpuT = getWiFiCpuTemp() > 0 ? getWiFiCpuTemp() : getBLECpuTemp();
-    float gpuT = getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
+    // Priority: USB > WiFi > BLE for temperature data
+    float cpuT = getUSBCpuTemp() > 0 ? getUSBCpuTemp() :
+                 getWiFiCpuTemp() > 0 ? getWiFiCpuTemp() : getBLECpuTemp();
+    float gpuT = getUSBGpuTemp() > 0 ? getUSBGpuTemp() :
+                 getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
 
     updateMainDisplay(getFanRPM(), getFanPercent(), getLedMode(), isFanOn());
     updateSecondaryDisplay(cpuT, gpuT,
@@ -118,8 +127,11 @@ void loop() {
 
   // ---- 6. Notify clients on both transports (every 500ms) ----
   if (now - lastCommNotify >= COMM_NOTIFY_MS) {
-    float cpuT = getWiFiCpuTemp() > 0 ? getWiFiCpuTemp() : getBLECpuTemp();
-    float gpuT = getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
+    // Priority: USB > WiFi > BLE for temperature data
+    float cpuT = getUSBCpuTemp() > 0 ? getUSBCpuTemp() :
+                 getWiFiCpuTemp() > 0 ? getWiFiCpuTemp() : getBLECpuTemp();
+    float gpuT = getUSBGpuTemp() > 0 ? getUSBGpuTemp() :
+                 getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
 
     // BLE notifications
     notifyRPM(getFanRPM());
@@ -127,6 +139,9 @@ void loop() {
 
     // WiFi WebSocket notifications
     wsNotifyStatus(getFanPercent(), isFanOn(), getLedMode(), isLedOn(), cpuT, gpuT);
+
+    // USB Serial notifications
+    usbNotifyStatus(getFanPercent(), isFanOn(), getLedMode(), isLedOn(), cpuT, gpuT);
 
     lastCommNotify = now;
   }

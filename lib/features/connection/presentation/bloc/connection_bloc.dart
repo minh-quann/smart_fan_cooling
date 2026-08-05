@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_fan_cooling/features/connection/data/services/ble_device_service.dart';
 import 'package:smart_fan_cooling/features/connection/data/services/windows_ble_device_service.dart';
 import 'package:smart_fan_cooling/features/connection/data/services/wifi_device_service.dart';
+import 'package:smart_fan_cooling/features/connection/data/services/usb_serial_device_service.dart';
 import 'package:smart_fan_cooling/features/connection/data/services/device_service.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_event.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_state.dart';
@@ -25,6 +26,7 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
     on<BleDeviceFoundEvent>(_onBleDeviceFound);
     on<ConnectBleEvent>(_onConnectBle);
     on<ConnectWifiEvent>(_onConnectWifi);
+    on<ConnectUsbEvent>(_onConnectUsb);
     on<DisconnectEvent>(_onDisconnect);
     on<AutoReconnectEvent>(_onAutoReconnect);
     on<DeviceStatusUpdatedEvent>(_onDeviceStatusUpdated);
@@ -58,12 +60,46 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
     final String? type = prefs.getString(_kConnType);
     final String? id = prefs.getString(_kConnId);
 
+    // Priority: Try USB first regardless of saved connection
+    if (Platform.isWindows) {
+      try {
+        final usbPorts = UsbSerialDeviceService.scanForEsp32Ports();
+        if (usbPorts.isNotEmpty) {
+          emit(state.copyWith(status: ConnectionStatus.connecting, connectionType: 'usb'));
+          final service = UsbSerialDeviceService(usbPorts.first);
+          await service.connect();
+          _statusSubscription = service.statusStream.listen((status) {
+            add(DeviceStatusUpdatedEvent(status));
+          });
+          await _saveConnection('usb', usbPorts.first);
+          emit(state.copyWith(
+            status: ConnectionStatus.connected,
+            activeService: service,
+            connectionType: 'usb',
+          ));
+          return;  // USB connected successfully, no need to try others
+        }
+      } catch (_) {
+        // USB auto-reconnect failed, fall through to saved connection
+      }
+    }
+
     if (type == null || id == null) return;
 
     emit(state.copyWith(status: ConnectionStatus.connecting, connectionType: type));
 
     try {
-      if (type == 'wifi') {
+      if (type == 'usb' && Platform.isWindows) {
+        final service = UsbSerialDeviceService(id);
+        await service.connect();
+        _statusSubscription = service.statusStream.listen((status) {
+          add(DeviceStatusUpdatedEvent(status));
+        });
+        emit(state.copyWith(
+          status: ConnectionStatus.connected,
+          activeService: service,
+        ));
+      } else if (type == 'wifi') {
         final service = WifiDeviceService(id);
         await service.connect();
         _statusSubscription = service.statusStream.listen((status) {
@@ -102,7 +138,7 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
   // ---- Scan ----
 
   Future<void> _onStartScan(StartScanEvent event, Emitter<ConnectionState> emit) async {
-    emit(state.copyWith(status: ConnectionStatus.scanning, bleDevices: [], wifiDevices: []));
+    emit(state.copyWith(status: ConnectionStatus.scanning, bleDevices: [], wifiDevices: [], usbDevices: []));
     
     try {
       if (!Platform.isWindows) {
@@ -144,6 +180,25 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
           ),
         ],
       ));
+
+      // Scan for USB devices (Windows only, highest priority)
+      if (Platform.isWindows) {
+        try {
+          final usbPorts = UsbSerialDeviceService.scanForEsp32Ports();
+          if (usbPorts.isNotEmpty) {
+            emit(state.copyWith(
+              usbDevices: usbPorts.map((port) => DiscoveredDevice(
+                name: 'ESP32-S3 USB',
+                id: port,
+                ipAddress: port,
+                type: 'usb',
+              )).toList(),
+            ));
+          }
+        } catch (_) {
+          // USB scan failed, continue with BLE/WiFi
+        }
+      }
     } catch (e) {
       if (!Platform.isWindows) {
         emit(state.copyWith(errorMessage: e.toString()));
@@ -248,6 +303,34 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
       emit(state.copyWith(
         status: ConnectionStatus.disconnected,
         errorMessage: 'Failed to connect via WiFi: $e',
+      ));
+    }
+  }
+
+  Future<void> _onConnectUsb(ConnectUsbEvent event, Emitter<ConnectionState> emit) async {
+    emit(state.copyWith(status: ConnectionStatus.connecting, connectionType: 'usb'));
+    
+    await _stopScanningAndDisconnect();
+    
+    try {
+      final UsbSerialDeviceService service = UsbSerialDeviceService(event.portName);
+      await service.connect();
+      
+      _statusSubscription = service.statusStream.listen((status) {
+        add(DeviceStatusUpdatedEvent(status));
+      });
+      
+      // Save for auto-reconnect
+      await _saveConnection('usb', event.portName);
+      
+      emit(state.copyWith(
+        status: ConnectionStatus.connected,
+        activeService: service,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ConnectionStatus.disconnected,
+        errorMessage: 'Failed to connect via USB: $e',
       ));
     }
   }
