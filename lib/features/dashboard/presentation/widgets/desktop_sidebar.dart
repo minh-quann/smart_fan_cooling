@@ -175,12 +175,12 @@ class DesktopSidebar extends StatelessWidget {
     final isSelected = currentTab == tab;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 2),
       child: InkWell(
         onTap: () => onTabChanged(tab),
         borderRadius: BorderRadius.circular(6),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 120),
           curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           decoration: BoxDecoration(
@@ -189,7 +189,7 @@ class DesktopSidebar extends StatelessWidget {
             border: Border(
               left: BorderSide(
                 color: isSelected ? AppColors.primary : Colors.transparent,
-                width: 3.5,
+                width: 3.0,
               ),
             ),
           ),

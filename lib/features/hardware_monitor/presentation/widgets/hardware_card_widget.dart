@@ -154,7 +154,7 @@ class HardwareCardWidget extends StatelessWidget {
                     value: animProgress,
                     backgroundColor: AppColors.surfaceLight,
                     valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                    minHeight: 5,
+                    minHeight: 4,
                   ),
                 );
               },

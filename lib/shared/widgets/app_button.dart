@@ -4,7 +4,7 @@ import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
 /// AppButton is a reusable action button widget styled after precision industrial UI controls.
 /// Anti-AI Slop design system.
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
@@ -29,51 +29,70 @@ class AppButton extends StatelessWidget {
   });
 
   @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final bgColor = isOutlined
+    final baseBgColor = widget.isOutlined
         ? Colors.transparent
-        : (backgroundColor ?? AppColors.primary);
-    final txtColor = textColor ??
-        (isOutlined ? AppColors.textPrimary : Colors.black);
+        : (widget.backgroundColor ?? AppColors.primary);
+
+    final txtColor = widget.textColor ??
+        (widget.isOutlined ? AppColors.textPrimary : Colors.black);
+
     final borderSide = BorderSide(
-      color: borderColor ?? (isOutlined ? AppColors.border : bgColor),
+      color: widget.borderColor ??
+          (widget.isOutlined
+              ? (_isHovered ? AppColors.primary : AppColors.border)
+              : baseBgColor),
       width: 1.2,
     );
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        customBorder: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
-          side: borderSide,
-        ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-          decoration: ShapeDecoration(
-            color: bgColor,
-            shape: RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
-              side: borderSide,
-            ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: widget.onPressed != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onPressed,
+          customBorder: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            side: borderSide,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 17, color: txtColor),
-                const SizedBox(width: 8),
-              ],
-              AppText(
-                label,
-                color: txtColor,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            decoration: ShapeDecoration(
+              color: _isHovered && !widget.isOutlined
+                  ? Color.alphaBlend(Colors.white.withValues(alpha: 0.1), baseBgColor)
+                  : baseBgColor,
+              shape: RoundedSuperellipseBorder(
+                borderRadius: BorderRadius.circular(widget.borderRadius),
+                side: borderSide,
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, size: 17, color: txtColor),
+                  const SizedBox(width: 8),
+                ],
+                AppText(
+                  widget.label,
+                  color: txtColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ],
+            ),
           ),
         ),
       ),

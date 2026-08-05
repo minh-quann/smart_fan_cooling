@@ -72,17 +72,8 @@ class RgbControlsWidget extends StatelessWidget {
                     color: color,
                     border: Border.all(
                       color: isSelected ? Colors.white : Colors.transparent,
-                      width: 3,
+                      width: 2.5,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.8),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ]
-                        : [],
                   ),
                 ),
               );

@@ -49,7 +49,7 @@ class RgbStripPreviewWidget extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Glowing LED Strip Simulation Box
+          // LED Strip Simulation Box
           Container(
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -57,17 +57,8 @@ class RgbStripPreviewWidget extends StatelessWidget {
               color: Colors.black,
               shape: RoundedSuperellipseBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: AppColors.border, width: 1.5),
+                side: const BorderSide(color: AppColors.border, width: 1.0),
               ),
-              shadows: [
-                BoxShadow(
-                  color: (config.mode == 'Off')
-                      ? Colors.transparent
-                      : config.primaryColor.withValues(alpha: (config.brightness / 100 * 0.6)),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -85,20 +76,11 @@ class RgbStripPreviewWidget extends StatelessWidget {
 
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  width: 14,
-                  height: 14,
+                  width: 12,
+                  height: 12,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: ledColor.withValues(alpha: config.brightness / 100),
-                    boxShadow: config.mode == 'Off'
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: ledColor.withValues(alpha: config.brightness / 100),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ],
                   ),
                 );
               }),
