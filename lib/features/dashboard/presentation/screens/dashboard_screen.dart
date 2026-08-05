@@ -106,18 +106,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: BlocListener<HardwareBloc, HardwareState>(
-        listenWhen: (prev, curr) => curr.status == HardwareStatus.success && prev.stats != curr.stats,
-        listener: (context, hwState) {
-          // Auto-send CPU/GPU temps to ESP32 when connected
-          final connBloc = context.read<ConnectionBloc>();
-          if (connBloc.state.status == conn_state.ConnectionStatus.connected) {
-            connBloc.state.activeService?.sendTemperature(
-              hwState.stats.cpuTemp,
-              hwState.stats.gpuTemp,
-            );
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<HardwareBloc, HardwareState>(
+            listenWhen: (prev, curr) => curr.status == HardwareStatus.success,
+            listener: (context, hwState) {
+              final connBloc = context.read<ConnectionBloc>();
+              if (connBloc.state.status == conn_state.ConnectionStatus.connected) {
+                connBloc.add(SendTemperatureEvent(
+                  hwState.stats.cpuTemp,
+                  hwState.stats.gpuTemp,
+                ));
+              }
+            },
+          ),
+          BlocListener<ConnectionBloc, conn_state.ConnectionState>(
+            listenWhen: (prev, curr) =>
+                curr.status == conn_state.ConnectionStatus.connected &&
+                prev.status != conn_state.ConnectionStatus.connected,
+            listener: (context, connState) {
+              final hwState = context.read<HardwareBloc>().state;
+              if (hwState.status == HardwareStatus.success) {
+                connState.activeService?.sendTemperature(
+                  hwState.stats.cpuTemp,
+                  hwState.stats.gpuTemp,
+                );
+              }
+            },
+          ),
+        ],
         child: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, profileState) {
           final activeProfile = profileState.activeProfile;
@@ -259,6 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       progressPercent: hwState.stats.gpuUsage,
                       extraPills: [
                         _buildMetricPill('Mức sử dụng GPU:', '${hwState.stats.gpuUsage}%', AppColors.gpuColor),
+                        _buildMetricPill('Xung nhịp GPU:', '${hwState.stats.gpuClock.toInt()} MHz', AppColors.cpuColor),
                         _buildMetricPill('Quạt GPU Laptop:', '${hwState.stats.gpuFanRpm} RPM', AppColors.primary),
                         _buildMetricPill('Công suất tiêu thụ:', '${hwState.stats.gpuPowerW} W', AppColors.accentRed),
                       ],

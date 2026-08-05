@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:universal_ble/universal_ble.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_fan_cooling/features/connection/data/services/ble_device_service.dart';
+import 'package:smart_fan_cooling/features/connection/data/services/windows_ble_device_service.dart';
 import 'package:smart_fan_cooling/features/connection/data/services/wifi_device_service.dart';
+import 'package:smart_fan_cooling/features/connection/data/services/device_service.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_event.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_state.dart';
 
@@ -30,6 +34,7 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
     on<SendLedColorEvent>(_onSendLedColor);
     on<SendLedBrightnessEvent>(_onSendLedBrightness);
     on<SendWifiConfigEvent>(_onSendWifiConfig);
+    on<SendTemperatureEvent>(_onSendTemperature);
   }
 
   // ---- Save / Load connection config ----
@@ -69,8 +74,13 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
           activeService: service,
         ));
       } else if (type == 'ble') {
-        final device = BluetoothDevice.fromId(id);
-        final service = BleDeviceService(device);
+        final DeviceService service;
+        if (Platform.isWindows) {
+          service = WindowsBleDeviceService(id);
+        } else {
+          final device = BluetoothDevice.fromId(id);
+          service = BleDeviceService(device);
+        }
         await service.connect();
         _statusSubscription = service.statusStream.listen((status) {
           add(DeviceStatusUpdatedEvent(status));
@@ -95,25 +105,39 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
     emit(state.copyWith(status: ConnectionStatus.scanning, bleDevices: [], wifiDevices: []));
     
     try {
-      _scanSubscription?.cancel();
-      _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
-        for (ScanResult r in results) {
-          String name = r.advertisementData.advName;
-          if (name.isEmpty) name = r.device.advName;
-          if (name.isEmpty) name = r.device.platformName;
-          add(BleDeviceFoundEvent(r.device, r.rssi, name));
-        }
-      });
+      if (!Platform.isWindows) {
+        _scanSubscription?.cancel();
+        _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
+          for (ScanResult r in results) {
+            String name = r.advertisementData.advName;
+            if (name.isEmpty) name = r.device.advName;
+            if (name.isEmpty) name = r.device.platformName;
+            add(BleDeviceFoundEvent(r.device, r.rssi, name));
+          }
+        });
 
-      await FlutterBluePlus.startScan(
-        timeout: const Duration(seconds: 10),
-      );
+        await FlutterBluePlus.startScan(
+          timeout: const Duration(seconds: 10),
+        );
+      } else {
+        // Windows platform BLE handling via UniversalBle
+        UniversalBle.onScanResult = (BleDevice device) {
+          String name = device.name ?? '';
+          if (name.isNotEmpty) {
+            final bDevice = BluetoothDevice.fromId(device.deviceId);
+            add(BleDeviceFoundEvent(bDevice, device.rssi ?? -70, name));
+          }
+        };
+        try {
+          await UniversalBle.startScan();
+        } catch (_) {}
+      }
       
       // Always show ESP32 AP as WiFi option
       emit(state.copyWith(
         wifiDevices: [
           const DiscoveredDevice(
-            name: "LlanoFan WiFi",
+            name: "LlanoFan WiFi AP",
             id: "192.168.4.1",
             ipAddress: "192.168.4.1",
             type: "wifi",
@@ -121,12 +145,20 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
         ],
       ));
     } catch (e) {
-      emit(state.copyWith(errorMessage: e.toString()));
+      if (!Platform.isWindows) {
+        emit(state.copyWith(errorMessage: e.toString()));
+      }
     }
   }
 
   Future<void> _onStopScan(StopScanEvent event, Emitter<ConnectionState> emit) async {
-    await FlutterBluePlus.stopScan();
+    if (!Platform.isWindows) {
+      await FlutterBluePlus.stopScan();
+    } else {
+      try {
+        await UniversalBle.stopScan();
+      } catch (_) {}
+    }
     _scanSubscription?.cancel();
     if (state.status == ConnectionStatus.scanning) {
       emit(state.copyWith(status: ConnectionStatus.disconnected));
@@ -165,7 +197,12 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
     await _stopScanningAndDisconnect();
     
     try {
-      final BleDeviceService service = BleDeviceService(event.device);
+      final DeviceService service;
+      if (Platform.isWindows) {
+        service = WindowsBleDeviceService(event.device.remoteId.str);
+      } else {
+        service = BleDeviceService(event.device);
+      }
       await service.connect();
       
       _statusSubscription = service.statusStream.listen((status) {
@@ -265,10 +302,20 @@ class ConnectionBloc extends Bloc<ConnectionEvent, ConnectionState> {
     await state.activeService?.sendWifiConfig(event.ssid, event.password);
   }
 
+  Future<void> _onSendTemperature(SendTemperatureEvent event, Emitter<ConnectionState> emit) async {
+    await state.activeService?.sendTemperature(event.cpuTemp, event.gpuTemp);
+  }
+
   // ---- Helpers ----
 
   Future<void> _stopScanningAndDisconnect() async {
-    await FlutterBluePlus.stopScan();
+    if (!Platform.isWindows) {
+      await FlutterBluePlus.stopScan();
+    } else {
+      try {
+        await UniversalBle.stopScan();
+      } catch (_) {}
+    }
     _scanSubscription?.cancel();
     _statusSubscription?.cancel();
     await state.activeService?.disconnect();

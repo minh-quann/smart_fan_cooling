@@ -38,6 +38,13 @@ class DeviceStatusUpdatedEvent extends ConnectionEvent {
   DeviceStatusUpdatedEvent(this.status);
 }
 
+class SendTemperatureEvent extends ConnectionEvent {
+  final double cpuTemp;
+  final double gpuTemp;
+
+  SendTemperatureEvent(this.cpuTemp, this.gpuTemp);
+}
+
 class SendFanSpeedEvent extends ConnectionEvent {
   final int percent;
 

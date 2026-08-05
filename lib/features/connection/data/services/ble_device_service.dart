@@ -146,27 +146,27 @@ class BleDeviceService implements DeviceService {
 
   @override
   Future<void> setFanSpeed(int percent) async {
-    await _charFanSpeed?.write([percent], withoutResponse: true);
+    await _charFanSpeed?.write([percent], withoutResponse: false);
   }
 
   @override
   Future<void> setFanState(bool on) async {
-    await _charFanState?.write([on ? 1 : 0], withoutResponse: true);
+    await _charFanState?.write([on ? 1 : 0], withoutResponse: false);
   }
 
   @override
   Future<void> setLedMode(int mode) async {
-    await _charLedMode?.write([mode], withoutResponse: true);
+    await _charLedMode?.write([mode], withoutResponse: false);
   }
 
   @override
   Future<void> setLedColor(int r, int g, int b) async {
-    await _charLedColor?.write([r, g, b], withoutResponse: true);
+    await _charLedColor?.write([r, g, b], withoutResponse: false);
   }
 
   @override
   Future<void> setLedBrightness(int brightness) async {
-    await _charLedBrightness?.write([brightness], withoutResponse: true);
+    await _charLedBrightness?.write([brightness], withoutResponse: false);
   }
 
   @override
@@ -174,7 +174,7 @@ class BleDeviceService implements DeviceService {
     final ByteData byteData = ByteData(8);
     byteData.setFloat32(0, cpu, Endian.little);
     byteData.setFloat32(4, gpu, Endian.little);
-    await _charTemp?.write(byteData.buffer.asUint8List(), withoutResponse: true);
+    await _charTemp?.write(byteData.buffer.asUint8List(), withoutResponse: false);
   }
 
   @override

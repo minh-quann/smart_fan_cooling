@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:smart_fan_cooling/features/hardware_monitor/domain/models/hardware_stats.dart';
@@ -141,6 +142,13 @@ class HardwareMonitorService {
           rawCpuTemp = winStats['cpuTemp'] ?? rawCpuTemp;
           rawCpuPowerW =
               winStats['cpuPowerW'] ?? (15.0 + (rawCpuUsage / 100.0) * 45.0);
+          // Fan RPM from LHM/OHM WMI
+          if (winStats.containsKey('cpuFanRpm') && winStats['cpuFanRpm']! > 0) {
+            internalCpuFanRpm = winStats['cpuFanRpm']!.round();
+          }
+          if (winStats.containsKey('gpuFanRpm') && winStats['gpuFanRpm']! > 0) {
+            internalGpuFanRpm = winStats['gpuFanRpm']!.round();
+          }
         }
 
         final gpuMetrics = await _readNvidiaGpuMetrics();
@@ -559,9 +567,127 @@ class HardwareMonitorService {
     return null;
   }
 
-  /// Read Full Hardware Telemetry on Windows via PowerShell / WMI & MSAcpi_ThermalZoneTemperature
+  /// Read CPU Package Temperature from LibreHardwareMonitor Web Server (http://localhost:8085/data.json)
+  /// This reads the ACTUAL CPU die/package temperature via LHM's kernel driver.
+  /// Returns null if LHM is not running.
+  Future<double?> _readLhmCpuTemp() async {
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(milliseconds: 800);
+      final request = await client.getUrl(
+        Uri.parse('http://localhost:8085/data.json'),
+      );
+      final response = await request.close().timeout(
+        const Duration(milliseconds: 1500),
+      );
+
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(body);
+
+        // Recursively search for CPU Package temperature in LHM JSON tree
+        double? cpuPackageTemp;
+        double? cpuCoreAvgTemp;
+        List<double> cpuCoreTemps = [];
+
+        void searchNode(dynamic node, bool isInsideCpu) {
+          if (node is Map<String, dynamic>) {
+            final text = (node['Text'] ?? '').toString();
+            final value = (node['Value'] ?? '').toString();
+            final children = node['Children'];
+
+            // Detect if we're inside a CPU hardware node
+            bool isCpuNode = isInsideCpu ||
+                text.toLowerCase().contains('cpu') &&
+                    !text.toLowerCase().contains('gpu');
+
+            if (isCpuNode && value.contains('°C')) {
+              // Extract numeric temperature value
+              final match = RegExp(r'([\d.]+)').firstMatch(value);
+              if (match != null) {
+                double temp = double.tryParse(match.group(1)!) ?? 0;
+                if (temp > 20 && temp < 115) {
+                  if (text.contains('Package') || text.contains('Tctl') || text.contains('Tdie')) {
+                    cpuPackageTemp = temp;
+                  } else if (text.contains('Average') || text.contains('CCD')) {
+                    cpuCoreAvgTemp = temp;
+                  } else if (text.contains('Core')) {
+                    cpuCoreTemps.add(temp);
+                  }
+                }
+              }
+            }
+
+            if (children is List) {
+              for (var child in children) {
+                searchNode(child, isCpuNode);
+              }
+            }
+          }
+        }
+
+        searchNode(json, false);
+
+        // Priority: Package > Average > Core Average
+        if (cpuPackageTemp != null) return cpuPackageTemp;
+        if (cpuCoreAvgTemp != null) return cpuCoreAvgTemp;
+        if (cpuCoreTemps.isNotEmpty) {
+          return cpuCoreTemps.reduce((a, b) => a + b) / cpuCoreTemps.length;
+        }
+      }
+      client.close(force: true);
+    } catch (_) {}
+    return null;
+  }
+
+  /// Read Full Hardware Telemetry on Windows (App runs as Administrator)
+  /// Reads: CPU temp, CPU usage, RAM, Clock, Fan RPM, Power via native C# helper
   Future<Map<String, double>?> _readWindowsMetrics() async {
     try {
+      // --- Step 1: Try compiled native C# hardware_helper.exe binary ---
+      double? scriptCpuTemp;
+      double? scriptCpuPowerW;
+      double? scriptCpuClock;
+      double? scriptCpuFan;
+      double? scriptGpuFan;
+
+      try {
+        final exeParent = File(Platform.resolvedExecutable).parent.path;
+        String helperPath = '$exeParent\\lhm\\hardware_helper.exe';
+        if (!await File(helperPath).exists()) {
+          helperPath = 'lhm\\hardware_helper.exe';
+        }
+
+        final scriptResult = await Process.run(helperPath, []);
+
+        if (scriptResult.exitCode == 0 &&
+            scriptResult.stdout.toString().trim().isNotEmpty) {
+          final jsonStr = scriptResult.stdout.toString().trim();
+          final data = jsonDecode(jsonStr);
+          if (data is Map<String, dynamic>) {
+            if (data.containsKey('cpuTemp') && (data['cpuTemp'] as num) > 0) {
+              scriptCpuTemp = (data['cpuTemp'] as num).toDouble();
+            }
+            if (data.containsKey('cpuPowerW') && (data['cpuPowerW'] as num) > 0) {
+              scriptCpuPowerW = (data['cpuPowerW'] as num).toDouble();
+            }
+            if (data.containsKey('cpuMaxClockGHz') && (data['cpuMaxClockGHz'] as num) > 0) {
+              scriptCpuClock = (data['cpuMaxClockGHz'] as num).toDouble();
+            }
+            if (data.containsKey('cpuFanRpm') && (data['cpuFanRpm'] as num) > 0) {
+              scriptCpuFan = (data['cpuFanRpm'] as num).toDouble();
+            }
+            if (data.containsKey('gpuFanRpm') && (data['gpuFanRpm'] as num) > 0) {
+              scriptGpuFan = (data['gpuFanRpm'] as num).toDouble();
+            }
+          }
+        }
+      } catch (_) {}
+
+      // --- Step 2: Try LibreHardwareMonitor Web Server as secondary ---
+      double? lhmTemp = scriptCpuTemp ?? await _readLhmCpuTemp();
+
+      // --- Step 3: PowerShell script for system WMI metrics (RAM, CPU Load, Clock) ---
       final psScript = '''
         \$mem = Get-CimInstance Win32_OperatingSystem;
         \$ram = [math]::Round(((\$mem.TotalVisibleMemorySize - \$mem.FreePhysicalMemory) / \$mem.TotalVisibleMemorySize) * 100, 1);
@@ -570,22 +696,35 @@ class HardwareMonitorService {
         \$cpuClock = [math]::Round(\$cpu.CurrentClockSpeed / 1000, 2);
 
         \$cpuTemp = 0;
+        \$cpuFanRpm = 0;
+        \$gpuFanRpm = 0;
+        \$cpuPowerW = 0;
+
+        # 1. Try LibreHardwareMonitor WMI
         try {
-          \$thermal = Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction SilentlyContinue;
-          if (\$thermal) {
-            \$temps = \$thermal | ForEach-Object { [math]::Round((\$_.CurrentTemperature - 2732) / 10, 1) } | Where-Object { \$_ -gt 20 -and \$_ -lt 115 };
-            if (\$temps) { \$cpuTemp = (\$temps | Measure-Object -Average).Average; }
+          \$lhmSensors = Get-CimInstance -Namespace root/LibreHardwareMonitor -ClassName Sensor -ErrorAction SilentlyContinue;
+          if (\$lhmSensors) {
+            \$tempSensors = \$lhmSensors | Where-Object { \$_.SensorType -eq 'Temperature' -and (\$_.Name -like '*CPU Package*' -or \$_.Name -like '*Core (Tctl/Tdie)*' -or \$_.Name -like '*Core Average*') };
+            if (\$tempSensors) {
+              \$pkg = \$tempSensors | Where-Object { \$_.Name -like '*Package*' -or \$_.Name -like '*Tctl*' -or \$_.Name -like '*Tdie*' } | Select-Object -First 1;
+              if (\$pkg) { \$cpuTemp = \$pkg.Value; }
+              else { \$cpuTemp = (\$tempSensors | Measure-Object -Property Value -Average).Average; }
+            }
+
+            \$fanSensors = \$lhmSensors | Where-Object { \$_.SensorType -eq 'Fan' };
+            if (\$fanSensors) {
+              \$cf = \$fanSensors | Where-Object { \$_.Name -like '*CPU*' -or \$_.Name -like '*Fan #1*' -or \$_.Name -like '*Fan 1*' } | Select-Object -First 1;
+              if (\$cf) { \$cpuFanRpm = [math]::Round(\$cf.Value); }
+              \$gf = \$fanSensors | Where-Object { \$_.Name -like '*GPU*' -or \$_.Name -like '*Fan #2*' -or \$_.Name -like '*Fan 2*' } | Select-Object -First 1;
+              if (\$gf) { \$gpuFanRpm = [math]::Round(\$gf.Value); }
+            }
+
+            \$pwrSensors = \$lhmSensors | Where-Object { \$_.SensorType -eq 'Power' -and (\$_.Name -like '*CPU Package*' -or \$_.Name -like '*CPU*') } | Select-Object -First 1;
+            if (\$pwrSensors) { \$cpuPowerW = [math]::Round(\$pwrSensors.Value, 1); }
           }
         } catch {}
 
-        if (\$cpuTemp -eq 0) {
-          try {
-            \$ohm = Get-CimInstance -Namespace root/OpenHardwareMonitor -ClassName Sensor -ErrorAction SilentlyContinue | Where-Object { \$_.SensorType -eq 'Temperature' -and \$_.Name -like '*CPU*' };
-            if (\$ohm) { \$cpuTemp = (\$ohm | Measure-Object -Property Value -Average).Average; }
-          } catch {}
-        }
-
-        Write-Output "\$ram,\$cpuUsage,\$cpuClock,\$cpuTemp"
+        Write-Output "\$ram,\$cpuUsage,\$cpuClock,\$cpuTemp,\$cpuFanRpm,\$gpuFanRpm,\$cpuPowerW"
       ''';
 
       final result = await Process.run('powershell', [
@@ -596,21 +735,36 @@ class HardwareMonitorService {
       ]);
 
       if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
-        final parts = result.stdout.toString().trim().split(',');
-        if (parts.length >= 4) {
+        final output = result.stdout.toString().trim();
+        final lines = output.split('\n');
+        final lastLine = lines.last.trim();
+        final parts = lastLine.split(',');
+        if (parts.length >= 7) {
           double? ram = double.tryParse(parts[0].trim());
           double? cpuUse = double.tryParse(parts[1].trim());
           double? cpuClk = double.tryParse(parts[2].trim());
-          double? temp = double.tryParse(parts[3].trim());
+          double? wmiTemp = double.tryParse(parts[3].trim());
+          double? cpuFan = double.tryParse(parts[4].trim());
+          double? gpuFan = double.tryParse(parts[5].trim());
+          double? cpuPwr = double.tryParse(parts[6].trim());
+
+          double finalTemp;
+          if (lhmTemp != null && lhmTemp > 25) {
+            finalTemp = lhmTemp;
+          } else if (wmiTemp != null && wmiTemp > 25) {
+            finalTemp = wmiTemp;
+          } else {
+            finalTemp = _currentStats.cpuTemp;
+          }
 
           return {
             'ramUsage': ram ?? _currentStats.ramUsage,
             'cpuUsage': cpuUse ?? _currentStats.cpuUsage,
-            'cpuClock': cpuClk ?? _currentStats.cpuClock,
-            'cpuTemp': (temp != null && temp > 20)
-                ? temp
-                : _currentStats.cpuTemp,
-            'cpuPowerW': 15.0 + ((cpuUse ?? 10.0) / 100.0) * 45.0,
+            'cpuClock': scriptCpuClock ?? (cpuClk ?? _currentStats.cpuClock),
+            'cpuTemp': finalTemp,
+            'cpuPowerW': scriptCpuPowerW ?? ((cpuPwr != null && cpuPwr > 0) ? cpuPwr : 15.0 + ((cpuUse ?? 10.0) / 100.0) * 45.0),
+            'cpuFanRpm': scriptCpuFan ?? (cpuFan ?? 0),
+            'gpuFanRpm': scriptGpuFan ?? (gpuFan ?? 0),
           };
         }
       }
