@@ -239,7 +239,7 @@ class UsbSerialDeviceService implements DeviceService {
 
   @override
   Future<void> sendCommand(String cmd, dynamic value) async {
-    _sendJson({"cmd": cmd, if (value != null) "value": value});
+    _sendJson({"cmd": cmd, "value":? value});
   }
 
   @override

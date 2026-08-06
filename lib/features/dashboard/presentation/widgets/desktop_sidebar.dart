@@ -10,6 +10,7 @@ enum DashboardTab {
   systemInfo,
   gpioTest,
   settings,
+  overlay,
 }
 
 class DesktopSidebar extends StatelessWidget {
@@ -120,6 +121,11 @@ class DesktopSidebar extends StatelessWidget {
             tab: DashboardTab.gpioTest,
             icon: Icons.developer_board_rounded,
             title: 'Test GPIO',
+          ),
+          _buildNavItem(
+            tab: DashboardTab.overlay,
+            icon: Icons.desktop_windows_rounded,
+            title: 'HUD Overlay Game/App',
           ),
           _buildNavItem(
             tab: DashboardTab.settings,

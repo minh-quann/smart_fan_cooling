@@ -3,31 +3,38 @@
 
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <flutter/method_channel.h>
+#include <flutter/standard_method_codec.h>
 
 #include <memory>
 
 #include "win32_window.h"
 
-// A window that does nothing but host a Flutter view.
+#define HOTKEY_OVERLAY_TOGGLE 9001
+
+// A window that hosting a Flutter view with native Windows OSD overlay capabilities.
 class FlutterWindow : public Win32Window {
  public:
-  // Creates a new FlutterWindow hosting a Flutter view running |project|.
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
 
+  void SetClickThrough(bool clickThrough);
+  void RegisterOverlayHotKey(UINT modifiers, UINT vkKey);
+
  protected:
-  // Win32Window:
   bool OnCreate() override;
   void OnDestroy() override;
   LRESULT MessageHandler(HWND window, UINT const message, WPARAM const wparam,
                          LPARAM const lparam) noexcept override;
 
  private:
-  // The project to run.
   flutter::DartProject project_;
-
-  // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+  std::unique_ptr<flutter::MethodChannel<>> method_channel_;
+
+  bool is_always_on_top_ = true;
+  bool is_click_through_ = true;
+  bool is_interactive_ = false;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

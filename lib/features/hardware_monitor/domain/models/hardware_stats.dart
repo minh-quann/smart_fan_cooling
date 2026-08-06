@@ -17,6 +17,7 @@ class HardwareStats extends Equatable {
   final int gpuFanRpm; // Internal Laptop GPU Fan RPM
   final double cpuPowerW; // CPU Package Power Wattage (W)
   final double gpuPowerW; // GPU Board Power Draw (W)
+  final int fps; // System & Game Render FPS
   final bool isFanConnected; // Connection status
 
   const HardwareStats({
@@ -35,6 +36,7 @@ class HardwareStats extends Equatable {
     this.gpuFanRpm = 2550,
     this.cpuPowerW = 35.0,
     this.gpuPowerW = 65.0,
+    this.fps = 120,
     this.isFanConnected = true,
   });
 
@@ -55,6 +57,7 @@ class HardwareStats extends Equatable {
       gpuFanRpm: 2550,
       cpuPowerW: 35.0,
       gpuPowerW: 65.0,
+      fps: 120,
       isFanConnected: true,
     );
   }
@@ -75,6 +78,7 @@ class HardwareStats extends Equatable {
     int? gpuFanRpm,
     double? cpuPowerW,
     double? gpuPowerW,
+    int? fps,
     bool? isFanConnected,
   }) {
     return HardwareStats(
@@ -93,6 +97,7 @@ class HardwareStats extends Equatable {
       gpuFanRpm: gpuFanRpm ?? this.gpuFanRpm,
       cpuPowerW: cpuPowerW ?? this.cpuPowerW,
       gpuPowerW: gpuPowerW ?? this.gpuPowerW,
+      fps: fps ?? this.fps,
       isFanConnected: isFanConnected ?? this.isFanConnected,
     );
   }
@@ -114,6 +119,7 @@ class HardwareStats extends Equatable {
         gpuFanRpm,
         cpuPowerW,
         gpuPowerW,
+        fps,
         isFanConnected,
       ];
 }

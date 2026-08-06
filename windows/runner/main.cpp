@@ -25,8 +25,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
-  Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
+
+  int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+  int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+  int windowWidth = 1280;
+  int windowHeight = 720;
+  int originX = (screenWidth - windowWidth) / 2;
+  int originY = (screenHeight - windowHeight) / 2;
+  if (originX < 0) originX = 0;
+  if (originY < 0) originY = 0;
+
+  Win32Window::Point origin(originX, originY);
+  Win32Window::Size size(windowWidth, windowHeight);
   if (!window.Create(L"smart_fan_cooling", origin, size)) {
     return EXIT_FAILURE;
   }

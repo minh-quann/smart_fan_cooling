@@ -30,6 +30,8 @@ import 'package:smart_fan_cooling/features/connection/presentation/bloc/connecti
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_event.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_state.dart'
     as conn_state;
+import 'package:smart_fan_cooling/features/overlay/presentation/screens/overlay_settings_screen.dart';
+import 'package:smart_fan_cooling/features/overlay/presentation/widgets/floating_osd_overlay_widget.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 import 'package:smart_fan_cooling/shared/widgets/glass_card.dart';
 
@@ -151,37 +153,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (context, profileState) {
             final activeProfile = profileState.activeProfile;
 
-            return Row(
+            return Stack(
               children: [
-                // Sidebar Navigation
-                DesktopSidebar(
-                  currentTab: _selectedTab,
-                  onTabChanged: (tab) => setState(() => _selectedTab = tab),
-                ),
+                Row(
+                  children: [
+                    // Sidebar Navigation
+                    DesktopSidebar(
+                      currentTab: _selectedTab,
+                      onTabChanged: (tab) => setState(() => _selectedTab = tab),
+                    ),
 
-                // Main Application Content Area
-                Expanded(
-                  child: Column(
-                    children: [
-                      // Top Bar Header
-                      DesktopHeader(
-                        activeProfileName: activeProfile.name,
-                        activeProfileColor: activeProfile.themeColor,
-                        onConnectionTap: _showConnectionDialog,
-                      ),
-
-                      // Active Tab View Content
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
-                          child: RepaintBoundary(
-                            child: _buildTabContent(context, profileState),
+                    // Main Application Content Area
+                    Expanded(
+                      child: Column(
+                        children: [
+                          // Top Bar Header
+                          DesktopHeader(
+                            activeProfileName: activeProfile.name,
+                            activeProfileColor: activeProfile.themeColor,
+                            onConnectionTap: _showConnectionDialog,
                           ),
-                        ),
+
+                          // Active Tab View Content
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(20),
+                              child: RepaintBoundary(
+                                child: _buildTabContent(context, profileState),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+
+                // Floating HUD OSD Overlay on top
+                const FloatingOsdOverlayWidget(),
               ],
             );
           },
@@ -206,6 +215,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return const GpioTestScreen();
       case DashboardTab.settings:
         return const SettingsScreen();
+      case DashboardTab.overlay:
+        return const OverlaySettingsScreen();
     }
   }
 

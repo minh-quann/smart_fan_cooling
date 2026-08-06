@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:smart_fan_cooling/core/services/real_fps_tracker.dart';
 import 'package:smart_fan_cooling/features/hardware_monitor/domain/models/hardware_stats.dart';
 
 /// Real Hardware Telemetry Service with Internal CPU/GPU Fan Speed & Power Wattage Reading.
@@ -192,6 +193,9 @@ class HardwareMonitorService {
       int currentPwm = _currentStats.pwmPercent;
       int expectedRpm = ((currentPwm / 100.0) * 2800).toInt();
 
+      RealFpsTracker().init();
+      int measuredFps = RealFpsTracker().currentFps;
+
       _currentStats = _currentStats.copyWith(
         cpuName: cpuName,
         gpuName: gpuName,
@@ -206,6 +210,7 @@ class HardwareMonitorService {
         gpuFanRpm: internalGpuFanRpm,
         cpuPowerW: double.parse(_emaCpuPowerW.toStringAsFixed(1)),
         gpuPowerW: double.parse(_emaGpuPowerW.toStringAsFixed(1)),
+        fps: measuredFps,
         fanRpm: expectedRpm,
       );
 

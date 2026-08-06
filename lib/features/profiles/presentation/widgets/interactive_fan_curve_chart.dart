@@ -1,7 +1,33 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
 import 'package:smart_fan_cooling/features/profiles/domain/models/fan_curve_point.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
+
+/// EagerPanGestureRecognizer immediately claims the gesture arena on pointer down,
+/// preventing parent Scrollables (SingleChildScrollView) from drag-scrolling
+/// when the user interacts with the fan curve chart.
+class _EagerPanGestureRecognizer extends PanGestureRecognizer {
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
+}
+
+class _CustomGestureRecognizerFactory<T extends GestureRecognizer>
+    extends GestureRecognizerFactory<T> {
+  final T Function() _builder;
+  final void Function(T) _config;
+
+  const _CustomGestureRecognizerFactory(this._builder, this._config);
+
+  @override
+  T constructor() => _builder();
+
+  @override
+  void initializer(T instance) => _config(instance);
+}
 
 /// InteractiveFanCurveChart allows users to drag points both horizontally (Temp °C)
 /// and vertically (PWM %) with 100% precise alignment between lines and dots.
@@ -99,25 +125,45 @@ class _InteractiveFanCurveChartState extends State<InteractiveFanCurveChart> {
         return SizedBox(
           width: width,
           height: height,
-          child: GestureDetector(
-            onPanStart: (details) {
-              final idx = _findPointAt(details.localPosition, plotWidth, plotHeight);
-              setState(() => _draggedIndex = idx);
-              widget.onActivePointChanged?.call(idx);
-              if (idx != null) {
-                _handleDrag(details.localPosition, plotWidth, plotHeight);
-              }
-            },
-            onPanUpdate: (details) {
-              _handleDrag(details.localPosition, plotWidth, plotHeight);
-            },
-            onPanEnd: (_) {
-              setState(() => _draggedIndex = null);
-              widget.onActivePointChanged?.call(null);
-            },
-            onPanCancel: () {
-              setState(() => _draggedIndex = null);
-              widget.onActivePointChanged?.call(null);
+          child: RawGestureDetector(
+            behavior: HitTestBehavior.opaque,
+            gestures: <Type, GestureRecognizerFactory>{
+              _EagerPanGestureRecognizer:
+                  _CustomGestureRecognizerFactory<_EagerPanGestureRecognizer>(
+                () => _EagerPanGestureRecognizer(),
+                (_EagerPanGestureRecognizer instance) {
+                  instance
+                    ..onDown = (details) {
+                      final idx = _findPointAt(details.localPosition, plotWidth, plotHeight);
+                      setState(() => _draggedIndex = idx);
+                      widget.onActivePointChanged?.call(idx);
+                      if (idx != null) {
+                        _handleDrag(details.localPosition, plotWidth, plotHeight);
+                      }
+                    }
+                    ..onStart = (details) {
+                      if (_draggedIndex == null) {
+                        final idx = _findPointAt(details.localPosition, plotWidth, plotHeight);
+                        setState(() => _draggedIndex = idx);
+                        widget.onActivePointChanged?.call(idx);
+                      }
+                      if (_draggedIndex != null) {
+                        _handleDrag(details.localPosition, plotWidth, plotHeight);
+                      }
+                    }
+                    ..onUpdate = (details) {
+                      _handleDrag(details.localPosition, plotWidth, plotHeight);
+                    }
+                    ..onEnd = (_) {
+                      setState(() => _draggedIndex = null);
+                      widget.onActivePointChanged?.call(null);
+                    }
+                    ..onCancel = () {
+                      setState(() => _draggedIndex = null);
+                      widget.onActivePointChanged?.call(null);
+                    };
+                },
+              ),
             },
             child: MouseRegion(
               cursor: widget.isFixedSpeed

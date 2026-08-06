@@ -27,8 +27,8 @@ class _GpioTestScreenState extends State<GpioTestScreen> {
   int _encB = -1;
   int _enc2A = -1;
   int _enc2B = -1;
-  int _enc2A_adc = 0;
-  int _enc2B_adc = 0;
+  int _enc2AAdc = 0;
+  int _enc2BAdc = 0;
   int _enc2Count = 0;
   int _btnPsh = -1;
   int _btnCon = -1;
@@ -132,8 +132,8 @@ class _GpioTestScreenState extends State<GpioTestScreen> {
       _encB = data['enc_b'] ?? -1;
       _enc2A = data['enc2_a'] ?? -1;
       _enc2B = data['enc2_b'] ?? -1;
-      _enc2A_adc = data['enc2_a_adc'] ?? 0;
-      _enc2B_adc = data['enc2_b_adc'] ?? 0;
+      _enc2AAdc = data['enc2_a_adc'] ?? 0;
+      _enc2BAdc = data['enc2_b_adc'] ?? 0;
       _enc2Count = data['enc2_count'] ?? 0;
       _btnPsh = data['btn_psh'] ?? -1;
       _btnCon = data['btn_con'] ?? -1;
