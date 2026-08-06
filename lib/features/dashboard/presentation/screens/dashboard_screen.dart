@@ -239,6 +239,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 context.read<HardwareBloc>().add(
                   ChangePwmSpeedEvent(selectedProf.maxFanPwm),
                 );
+                // Also send to ESP32
+                context.read<ConnectionBloc>().add(
+                  SendFanSpeedEvent(selectedProf.maxFanPwm),
+                );
               },
               onAddProfilePressed: () => _showAddProfileDialog(context),
               onEditProfilePressed: (p) => _showEditProfileDialog(context, p),
@@ -255,10 +259,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final leftPanel = Column(
                   children: [
                     RepaintBoundary(
-                      child: RpmGaugeWidget(
-                        fanRpm: hwState.stats.fanRpm,
-                        pwmPercent: hwState.stats.pwmPercent,
-                        isConnected: hwState.stats.isFanConnected,
+                      child: BlocBuilder<ConnectionBloc, conn_state.ConnectionState>(
+                        builder: (context, connState) {
+                          // Use real RPM from ESP32 if available, otherwise fallback to estimated
+                          final realRpm = connState.deviceStatus?.rpm ?? 0;
+                          final displayRpm = realRpm > 0 ? realRpm : hwState.stats.fanRpm;
+                          final isEspConnected = connState.status == conn_state.ConnectionStatus.connected;
+                          return RpmGaugeWidget(
+                            fanRpm: displayRpm,
+                            pwmPercent: hwState.stats.pwmPercent,
+                            isConnected: isEspConnected || hwState.stats.isFanConnected,
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -266,9 +278,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: QuickFanControlWidget(
                         currentPwm: hwState.stats.pwmPercent,
                         onPwmChanged: (pwm) {
+                          // Update local UI state
                           context.read<HardwareBloc>().add(
                             ChangePwmSpeedEvent(pwm),
                           );
+                          // Send command to ESP32 via USB/BLE/WiFi
+                          context.read<ConnectionBloc>().add(
+                            SendFanSpeedEvent(pwm),
+                          );
+                          // Also ensure fan is ON when user sets speed > 0
+                          if (pwm > 0) {
+                            context.read<ConnectionBloc>().add(
+                              SendFanStateEvent(true),
+                            );
+                          }
                         },
                       ),
                     ),
