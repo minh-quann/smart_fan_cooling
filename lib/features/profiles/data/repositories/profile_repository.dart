@@ -11,7 +11,7 @@ class ProfileRepository {
       name: 'Silent',
       description: 'Quạt quay êm ái, tối đa 40% PWM, phù hợp làm việc văn phòng, xem phim',
       icon: Icons.volume_off_rounded,
-      themeColor: AppColors.primary,
+      themeColor: AppColors.secondary,
       maxFanPwm: 50,
       fanCurve: [
         FanCurvePoint(30, 15),
@@ -22,7 +22,7 @@ class ProfileRepository {
         FanCurvePoint(100, 60),
       ],
       rgbMode: 'Breathing',
-      rgbColor: AppColors.primary,
+      rgbColor: AppColors.secondary,
       isDefault: true,
       isFixedSpeed: false,
       fixedPwm: 40,
@@ -32,7 +32,7 @@ class ProfileRepository {
       name: 'Balanced',
       description: 'Tự động cân bằng giữa hiệu năng làm mát và tiếng ồn',
       icon: Icons.tune_rounded,
-      themeColor: AppColors.secondary,
+      themeColor: AppColors.primary,
       maxFanPwm: 100,
       fanCurve: [
         FanCurvePoint(30, 20),
@@ -43,7 +43,7 @@ class ProfileRepository {
         FanCurvePoint(100, 100),
       ],
       rgbMode: 'Rainbow',
-      rgbColor: AppColors.secondary,
+      rgbColor: AppColors.primary,
       isDefault: true,
       isFixedSpeed: false,
       fixedPwm: 60,
@@ -53,7 +53,7 @@ class ProfileRepository {
       name: 'Turbo',
       description: 'Đẩy công suất quạt Llano tối đa 100% khi chơi game nặng hay Render',
       icon: Icons.bolt_rounded,
-      themeColor: AppColors.accentRed,
+      themeColor: AppColors.accentCyan,
       maxFanPwm: 100,
       fanCurve: [
         FanCurvePoint(30, 35),
@@ -64,7 +64,7 @@ class ProfileRepository {
         FanCurvePoint(100, 100),
       ],
       rgbMode: 'ThermalSync',
-      rgbColor: AppColors.accentRed,
+      rgbColor: AppColors.accentCyan,
       isDefault: true,
       isFixedSpeed: false,
       fixedPwm: 100,
@@ -74,7 +74,7 @@ class ProfileRepository {
       name: 'Adaptive',
       description: 'Tự động điều chỉnh công suất quạt thông minh dựa trên đường cong nhiệt độ thực tế',
       icon: Icons.auto_awesome_rounded,
-      themeColor: AppColors.accentPurple,
+      themeColor: AppColors.accentSky,
       maxFanPwm: 100,
       fanCurve: [
         FanCurvePoint(30, 20),
@@ -85,47 +85,14 @@ class ProfileRepository {
         FanCurvePoint(100, 100),
       ],
       rgbMode: 'Wave',
-      rgbColor: AppColors.accentPurple,
+      rgbColor: AppColors.accentSky,
       isDefault: true,
       isFixedSpeed: false,
       fixedPwm: 50,
     ),
   ];
 
-  final List<AppMapping> _appMappings = [
-    const AppMapping(
-      id: 'app_1',
-      appName: 'Google Chrome',
-      executableName: 'chrome.exe',
-      iconPath: 'chrome',
-      profileId: 'profile_silent',
-      isEnabled: true,
-    ),
-    const AppMapping(
-      id: 'app_2',
-      appName: 'Microsoft Word / Office',
-      executableName: 'winword.exe',
-      iconPath: 'word',
-      profileId: 'profile_silent',
-      isEnabled: true,
-    ),
-    const AppMapping(
-      id: 'app_3',
-      appName: 'Cyberpunk 2077',
-      executableName: 'cyberpunk2077.exe',
-      iconPath: 'game',
-      profileId: 'profile_turbo',
-      isEnabled: true,
-    ),
-    const AppMapping(
-      id: 'app_4',
-      appName: 'Adobe Premiere Pro',
-      executableName: 'adobe_premiere.exe',
-      iconPath: 'video',
-      profileId: 'profile_turbo',
-      isEnabled: true,
-    ),
-  ];
+  final List<AppMapping> _appMappings = [];
 
   List<FanProfile> getProfiles() => List.unmodifiable(_profiles);
 

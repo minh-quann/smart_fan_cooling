@@ -53,10 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showConnectionDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const ConnectionScreen(),
-    );
+    showDialog(context: context, builder: (_) => const ConnectionScreen());
   }
 
   void _showAddProfileDialog(BuildContext context) {
@@ -95,9 +92,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppText(label, fontSize: 10.5, color: AppColors.textMuted, isMonospace: true),
+          AppText(
+            label,
+            fontSize: 10.5,
+            color: AppColors.textMuted,
+            isMonospace: true,
+          ),
           const SizedBox(width: 4),
-          AppText(value, fontSize: 10.5, fontWeight: FontWeight.w800, color: color, isMonospace: true),
+          AppText(
+            value,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            color: color,
+            isMonospace: true,
+          ),
         ],
       ),
     );
@@ -113,11 +121,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             listenWhen: (prev, curr) => curr.status == HardwareStatus.success,
             listener: (context, hwState) {
               final connBloc = context.read<ConnectionBloc>();
-              if (connBloc.state.status == conn_state.ConnectionStatus.connected) {
-                connBloc.add(SendTemperatureEvent(
-                  hwState.stats.cpuTemp,
-                  hwState.stats.gpuTemp,
-                ));
+              if (connBloc.state.status ==
+                  conn_state.ConnectionStatus.connected) {
+                connBloc.add(
+                  SendTemperatureEvent(
+                    hwState.stats.cpuTemp,
+                    hwState.stats.gpuTemp,
+                  ),
+                );
               }
             },
           ),
@@ -137,44 +148,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
         child: BlocBuilder<ProfileBloc, ProfileState>(
-        builder: (context, profileState) {
-          final activeProfile = profileState.activeProfile;
+          builder: (context, profileState) {
+            final activeProfile = profileState.activeProfile;
 
-          return Row(
-            children: [
-              // Sidebar Navigation
-              DesktopSidebar(
-                currentTab: _selectedTab,
-                onTabChanged: (tab) => setState(() => _selectedTab = tab),
-              ),
+            return Row(
+              children: [
+                // Sidebar Navigation
+                DesktopSidebar(
+                  currentTab: _selectedTab,
+                  onTabChanged: (tab) => setState(() => _selectedTab = tab),
+                ),
 
-              // Main Application Content Area
-              Expanded(
-                child: Column(
-                  children: [
-                    // Top Bar Header
-                    DesktopHeader(
-                      activeProfileName: activeProfile.name,
-                      activeProfileColor: activeProfile.themeColor,
-                      onConnectionTap: _showConnectionDialog,
-                    ),
+                // Main Application Content Area
+                Expanded(
+                  child: Column(
+                    children: [
+                      // Top Bar Header
+                      DesktopHeader(
+                        activeProfileName: activeProfile.name,
+                        activeProfileColor: activeProfile.themeColor,
+                        onConnectionTap: _showConnectionDialog,
+                      ),
 
-                    // Active Tab View Content
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: RepaintBoundary(
-                          child: _buildTabContent(context, profileState),
+                      // Active Tab View Content
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: RepaintBoundary(
+                            child: _buildTabContent(context, profileState),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -214,11 +225,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   (p) => p.id == id,
                   orElse: () => profileState.activeProfile,
                 );
-                context.read<HardwareBloc>().add(ChangePwmSpeedEvent(selectedProf.maxFanPwm));
+                context.read<HardwareBloc>().add(
+                  ChangePwmSpeedEvent(selectedProf.maxFanPwm),
+                );
               },
               onAddProfilePressed: () => _showAddProfileDialog(context),
               onEditProfilePressed: (p) => _showEditProfileDialog(context, p),
-              onDeleteProfilePressed: (id) => context.read<ProfileBloc>().add(DeleteProfileEvent(id)),
+              onDeleteProfilePressed: (id) =>
+                  context.read<ProfileBloc>().add(DeleteProfileEvent(id)),
             ),
             const SizedBox(height: 20),
 
@@ -241,7 +255,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: QuickFanControlWidget(
                         currentPwm: hwState.stats.pwmPercent,
                         onPwmChanged: (pwm) {
-                          context.read<HardwareBloc>().add(ChangePwmSpeedEvent(pwm));
+                          context.read<HardwareBloc>().add(
+                            ChangePwmSpeedEvent(pwm),
+                          );
                         },
                       ),
                     ),
@@ -254,16 +270,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     HardwareCardWidget(
                       title: 'Nhiệt Độ Vi Xử Lý CPU',
                       subTitle: hwState.stats.cpuName,
-                      valueText: '${hwState.stats.cpuTemp}',
+                      valueText: '${hwState.stats.cpuTemp.round()}',
                       unitText: '°C',
                       icon: Icons.memory_rounded,
                       accentColor: AppColors.cpuColor,
                       progressPercent: hwState.stats.cpuUsage,
                       extraPills: [
-                        _buildMetricPill('Mức sử dụng:', '${hwState.stats.cpuUsage}%', AppColors.accentOrange),
-                        _buildMetricPill('Tốc độ Clock:', '${hwState.stats.cpuClock} GHz', AppColors.cpuColor),
-                        _buildMetricPill('Quạt CPU Laptop:', '${hwState.stats.cpuFanRpm} RPM', AppColors.primary),
-                        _buildMetricPill('Công suất tiêu thụ:', '${hwState.stats.cpuPowerW} W', AppColors.accentRed),
+                        _buildMetricPill(
+                          'Mức sử dụng:',
+                          '${hwState.stats.cpuUsage.round()}%',
+                          AppColors.accentOrange,
+                        ),
+                        _buildMetricPill(
+                          'Tốc độ Clock:',
+                          _formatClockFromMhz(hwState.stats.cpuClock * 1000),
+                          AppColors.cpuColor,
+                        ),
+                        _buildMetricPill(
+                          'Quạt CPU Laptop:',
+                          '${hwState.stats.cpuFanRpm} RPM',
+                          AppColors.primary,
+                        ),
+                        _buildMetricPill(
+                          'Công suất tiêu thụ:',
+                          '${hwState.stats.cpuPowerW.round()} W',
+                          AppColors.accentRed,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -272,16 +304,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     HardwareCardWidget(
                       title: 'Nhiệt Độ Card Đồ Họa GPU',
                       subTitle: hwState.stats.gpuName,
-                      valueText: '${hwState.stats.gpuTemp}',
+                      valueText: '${hwState.stats.gpuTemp.round()}',
                       unitText: '°C',
                       icon: Icons.developer_board_rounded,
                       accentColor: AppColors.gpuColor,
                       progressPercent: hwState.stats.gpuUsage,
                       extraPills: [
-                        _buildMetricPill('Mức sử dụng GPU:', '${hwState.stats.gpuUsage}%', AppColors.gpuColor),
-                        _buildMetricPill('Xung nhịp GPU:', '${hwState.stats.gpuClock.toInt()} MHz', AppColors.cpuColor),
-                        _buildMetricPill('Quạt GPU Laptop:', '${hwState.stats.gpuFanRpm} RPM', AppColors.primary),
-                        _buildMetricPill('Công suất tiêu thụ:', '${hwState.stats.gpuPowerW} W', AppColors.accentRed),
+                        _buildMetricPill(
+                          'Mức sử dụng GPU:',
+                          '${hwState.stats.gpuUsage.round()}%',
+                          AppColors.gpuColor,
+                        ),
+                        _buildMetricPill(
+                          'Xung nhịp GPU:',
+                          _formatClockFromMhz(hwState.stats.gpuClock),
+                          AppColors.cpuColor,
+                        ),
+                        _buildMetricPill(
+                          'Quạt GPU Laptop:',
+                          '${hwState.stats.gpuFanRpm} RPM',
+                          AppColors.primary,
+                        ),
+                        _buildMetricPill(
+                          'Công suất tiêu thụ:',
+                          '${hwState.stats.gpuPowerW.round()} W',
+                          AppColors.accentRed,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -290,14 +338,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     HardwareCardWidget(
                       title: 'Mức Sử Dụng RAM Hệ Thống',
                       subTitle: 'DDR4/DDR5 System RAM',
-                      valueText: '${hwState.stats.ramUsage}',
+                      valueText: '${hwState.stats.ramUsage.round()}',
                       unitText: '%',
                       icon: Icons.straighten_rounded,
                       accentColor: AppColors.ramColor,
                       progressPercent: hwState.stats.ramUsage,
                       extraPills: [
-                        _buildMetricPill('Bộ nhớ:', 'Đang dùng ${hwState.stats.ramUsage}%', AppColors.ramColor),
-                        _buildMetricPill('Băng thông:', 'High Performance', AppColors.accentPurple),
+                        _buildMetricPill(
+                          'Bộ nhớ:',
+                          'Đang dùng ${hwState.stats.ramUsage.round()}%',
+                          AppColors.ramColor,
+                        ),
+                        _buildMetricPill(
+                          'Băng thông:',
+                          'High Performance',
+                          AppColors.accentPurple,
+                        ),
                       ],
                     ),
                   ],
@@ -315,11 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 }
 
                 return Column(
-                  children: [
-                    leftPanel,
-                    const SizedBox(height: 16),
-                    rightPanel,
-                  ],
+                  children: [leftPanel, const SizedBox(height: 16), rightPanel],
                 );
               },
             ),
@@ -342,7 +394,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
           onAddProfilePressed: () => _showAddProfileDialog(context),
           onEditProfilePressed: (p) => _showEditProfileDialog(context, p),
-          onDeleteProfilePressed: (id) => context.read<ProfileBloc>().add(DeleteProfileEvent(id)),
+          onDeleteProfilePressed: (id) =>
+              context.read<ProfileBloc>().add(DeleteProfileEvent(id)),
         ),
         const SizedBox(height: 20),
         FanCurveEditorWidget(profile: activeProfile),
@@ -366,7 +419,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 context.read<RgbBloc>().add(ChangeRgbPrimaryColorEvent(color));
               },
               onBrightnessChanged: (brightness) {
-                context.read<RgbBloc>().add(ChangeRgbBrightnessEvent(brightness));
+                context.read<RgbBloc>().add(
+                  ChangeRgbBrightnessEvent(brightness),
+                );
               },
               onSpeedChanged: (speed) {
                 context.read<RgbBloc>().add(ChangeRgbSpeedEvent(speed));
@@ -414,13 +469,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 8),
           AppText.body('Giao Tiếp Nạp Code: USB CDC On Boot (Data Cable)'),
           const SizedBox(height: 8),
-          AppText.body('Quạt Tản Nhiệt: Llano Laptop 12V High-Speed Fan (3 Dây)'),
+          AppText.body(
+            'Quạt Tản Nhiệt: Llano Laptop 12V High-Speed Fan (3 Dây)',
+          ),
           const SizedBox(height: 8),
-          AppText.body('Cảm Biến Phản Hồi Xung RPM: Opto PC817 (Chân Ngắt Interrupt GPIO 5)'),
+          AppText.body(
+            'Cảm Biến Phản Hồi Xung RPM: Opto PC817 (Chân Ngắt Interrupt GPIO 5)',
+          ),
           const SizedBox(height: 8),
-          AppText.body('Màn Hình Điều Khiển: OLED 1.3" All-in-One 9 Chân Tích Hợp Encoder'),
+          AppText.body(
+            'Màn Hình Điều Khiển: OLED 1.3" All-in-One 9 Chân Tích Hợp Encoder',
+          ),
         ],
       ),
     );
+  }
+
+  String _formatClockFromMhz(double mhz) {
+    if (mhz < 1000) {
+      return '${mhz.round()} MHz';
+    } else {
+      final ghz = mhz / 1000.0;
+      return '${ghz.toStringAsFixed(2)} GHz';
+    }
   }
 }

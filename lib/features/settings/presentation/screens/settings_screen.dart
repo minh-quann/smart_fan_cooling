@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
+import 'package:smart_fan_cooling/features/settings/presentation/widgets/setting_switch_tile.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_button.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 import 'package:smart_fan_cooling/shared/widgets/glass_card.dart';
@@ -42,7 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: AppColors.primary,
         content: AppText(
           'Đã lưu toàn bộ thiết lập hệ thống & cấu hình Tray Icon!',
-          color: Colors.black,
+          color: Colors.white,
           fontWeight: FontWeight.w700,
         ),
         duration: Duration(seconds: 2),
@@ -111,7 +112,7 @@ X-GNOME-Autostart-enabled=true
               label: 'LƯU THIẾT LẬP',
               icon: Icons.save_rounded,
               backgroundColor: AppColors.primary,
-              textColor: Colors.black,
+              textColor: Colors.white,
               onPressed: _saveSettings,
             ),
           ],
@@ -133,7 +134,7 @@ X-GNOME-Autostart-enabled=true
               ),
               const SizedBox(height: 16),
 
-              _buildSwitchTile(
+              SettingSwitchTile(
                 title: 'Khởi động ứng dụng cùng hệ thống (${Platform.isWindows ? 'Windows Startup' : 'Linux Autostart'})',
                 subtitle: 'Tự động mở Llano Smart Fan Hub ngay khi máy tính khởi động vào hệ điều hành',
                 icon: Icons.power_settings_new_rounded,
@@ -142,7 +143,7 @@ X-GNOME-Autostart-enabled=true
               ),
               const Divider(color: AppColors.border, height: 24),
 
-              _buildSwitchTile(
+              SettingSwitchTile(
                 title: 'Thu nhỏ ứng dụng xuống System Tray khi đóng cửa sổ',
                 subtitle: 'Khi bấm nút X đóng cửa sổ, ứng dụng sẽ thu nhỏ xuống khay Taskbar thay vì thoát hẳn',
                 icon: Icons.compress_rounded,
@@ -151,7 +152,7 @@ X-GNOME-Autostart-enabled=true
               ),
               const Divider(color: AppColors.border, height: 24),
 
-              _buildSwitchTile(
+              SettingSwitchTile(
                 title: 'Hiển thị Icon biểu tượng dưới thanh khay công cụ (System Tray)',
                 subtitle: 'Hiển thị icon quạt Llano thu nhỏ ở góc màn hình để bật nhanh các profile làm mát',
                 icon: Icons.widgets_rounded,
@@ -160,7 +161,7 @@ X-GNOME-Autostart-enabled=true
               ),
               const Divider(color: AppColors.border, height: 24),
 
-              _buildSwitchTile(
+              SettingSwitchTile(
                 title: 'Duy trì dịch vụ điều tốc chạy ngầm (Background Service)',
                 subtitle: 'Đảm bảo quạt Llano luôn tự động chỉnh tốc độ theo nhiệt độ ngay cả khi ẩn cửa sổ',
                 icon: Icons.published_with_changes_rounded,
@@ -311,7 +312,7 @@ X-GNOME-Autostart-enabled=true
               ),
               const SizedBox(height: 16),
 
-              _buildSwitchTile(
+              SettingSwitchTile(
                 title: 'Bật cảnh báo khi nhiệt độ CPU / GPU vượt mức an toàn (> $_overheatThresholdTemp°C)',
                 subtitle: 'Tự động kích hoạt quạt Llano lên 100% MAX speed và phát âm thanh/thông báo cảnh báo nóng máy',
                 icon: Icons.warning_amber_rounded,
@@ -324,45 +325,5 @@ X-GNOME-Autostart-enabled=true
       ],
     );
   }
-
-  Widget _buildSwitchTile({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: ShapeDecoration(
-            color: value ? AppColors.primary.withValues(alpha: 0.15) : AppColors.surfaceLight,
-            shape: RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: value ? AppColors.primary : AppColors.border),
-            ),
-          ),
-          child: Icon(icon, color: value ? AppColors.primary : AppColors.textMuted, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText(title, fontSize: 14, fontWeight: FontWeight.w700),
-              const SizedBox(height: 2),
-              AppText.caption(subtitle),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Switch(
-          value: value,
-          activeTrackColor: AppColors.primary,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
 }
+

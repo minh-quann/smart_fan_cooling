@@ -3,7 +3,6 @@ import 'package:smart_fan_cooling/core/theme/app_colors.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
 /// AppButton is a reusable action button widget styled after precision industrial UI controls.
-/// Anti-AI Slop design system.
 class AppButton extends StatefulWidget {
   final String label;
   final IconData? icon;
@@ -24,7 +23,7 @@ class AppButton extends StatefulWidget {
     this.textColor,
     this.borderColor,
     this.isOutlined = false,
-    this.borderRadius = 10.0,
+    this.borderRadius = 8.0,
     this.padding,
   });
 
@@ -42,7 +41,9 @@ class _AppButtonState extends State<AppButton> {
         : (widget.backgroundColor ?? AppColors.primary);
 
     final txtColor = widget.textColor ??
-        (widget.isOutlined ? AppColors.textPrimary : Colors.black);
+        (widget.isOutlined
+            ? AppColors.textPrimary
+            : (baseBgColor == AppColors.primary ? Colors.white : Colors.black));
 
     final borderSide = BorderSide(
       color: widget.borderColor ??
@@ -67,29 +68,38 @@ class _AppButtonState extends State<AppButton> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
             curve: Curves.easeOut,
-            padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: ShapeDecoration(
               color: _isHovered && !widget.isOutlined
-                  ? Color.alphaBlend(Colors.white.withValues(alpha: 0.1), baseBgColor)
+                  ? Color.alphaBlend(Colors.white.withValues(alpha: 0.12), baseBgColor)
                   : baseBgColor,
               shape: RoundedSuperellipseBorder(
                 borderRadius: BorderRadius.circular(widget.borderRadius),
                 side: borderSide,
               ),
+              shadows: _isHovered && widget.onPressed != null && !widget.isOutlined
+                  ? [
+                      BoxShadow(
+                        color: baseBgColor.withValues(alpha: 0.4),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (widget.icon != null) ...[
-                  Icon(widget.icon, size: 17, color: txtColor),
+                  Icon(widget.icon, size: 16, color: txtColor),
                   const SizedBox(width: 8),
                 ],
                 AppText(
                   widget.label,
                   color: txtColor,
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 12.5,
                 ),
               ],
             ),
