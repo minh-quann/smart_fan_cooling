@@ -2,6 +2,7 @@
 #include "config.h"
 #include "fan_controller.h"
 #include "led_effects.h"
+#include "encoder_input.h"
 #include "wifi_service.h"
 #include <ArduinoJson.h>
 
@@ -90,6 +91,21 @@ static void handleUSBCommand(const char* payload) {
       "{\"cmd\":\"wifi_status\",\"sta_connected\":%s,\"sta_ip\":\"%s\",\"sta_ssid\":\"%s\",\"ap_ip\":\"%s\"}",
       isSTAConnected() ? "true" : "false",
       getSTAIP().c_str(), getSTASSID().c_str(), getAPIP().c_str());
+    Serial.println(resp);
+  }
+  else if (strcmp(cmd, "pin_test") == 0) {
+    // Read raw GPIO pin states for encoder 1 and buttons
+    int encA = digitalRead(PIN_ENC_A);
+    int encB = digitalRead(PIN_ENC_B);
+    // Enc2: only use interrupt count (analogRead/digitalRead breaks interrupts!)
+    int64_t enc2Count = getEncoder2Count();
+    int btnPsh = digitalRead(PIN_BTN_PSH);
+    int btnCon = digitalRead(PIN_BTN_CON);
+    int btnBak = digitalRead(PIN_BTN_BAK);
+    char resp[250];
+    snprintf(resp, sizeof(resp),
+      "{\"cmd\":\"pin_test\",\"enc_a\":%d,\"enc_b\":%d,\"enc2_count\":%lld,\"btn_psh\":%d,\"btn_con\":%d,\"btn_bak\":%d}",
+      encA, encB, enc2Count, btnPsh, btnCon, btnBak);
     Serial.println(resp);
   }
 }

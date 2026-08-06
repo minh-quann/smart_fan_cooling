@@ -15,9 +15,13 @@
 #define PIN_OLED1_SDA     8
 #define PIN_OLED1_SCL     9
 
-// Rotary encoder
+// Rotary encoder 1 (on OLED 1.3" module)
 #define PIN_ENC_A         10  // TRA - Channel A
 #define PIN_ENC_B         11  // TRB - Channel B
+
+// Rotary encoder 2 (mouse scroll wheel)
+#define PIN_ENC2_A        15  // Enc2 Channel A
+#define PIN_ENC2_B        16  // Enc2 Channel B
 
 // Buttons on OLED 1.3" module
 #define PIN_BTN_CON       12  // CON - Toggle LED on/off

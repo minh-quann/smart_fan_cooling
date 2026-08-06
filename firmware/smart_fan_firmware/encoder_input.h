@@ -10,5 +10,10 @@ enum ButtonEvent : uint8_t {
 };
 
 void initEncoder();
-int8_t getEncoderDelta();    // Returns detent steps since last call (+/-)
-ButtonEvent checkButtons();  // Returns which button was pressed (debounced)
+int8_t getEncoderDelta();     // Enc1: Returns detent steps since last call (+/-)
+ButtonEvent checkButtons();   // Returns which button was pressed (debounced)
+
+// Encoder 2 (scroll wheel)
+void initEncoder2();
+int8_t getEncoder2Delta();    // Enc2: detent steps (+/-)
+int64_t getEncoder2Count();   // Enc2: raw count for diagnostics

@@ -24,6 +24,7 @@ import 'package:smart_fan_cooling/features/rgb_lighting/presentation/bloc/rgb_st
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/widgets/rgb_controls_widget.dart';
 import 'package:smart_fan_cooling/features/rgb_lighting/presentation/widgets/rgb_strip_preview_widget.dart';
 import 'package:smart_fan_cooling/features/settings/presentation/screens/settings_screen.dart';
+import 'package:smart_fan_cooling/features/gpio_test/presentation/screens/gpio_test_screen.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/screens/connection_screen.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_bloc.dart';
 import 'package:smart_fan_cooling/features/connection/presentation/bloc/connection_event.dart';
@@ -190,6 +191,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return _buildAppProfileTab(context, profileState);
       case DashboardTab.systemInfo:
         return _buildSystemInfoTab(context);
+      case DashboardTab.gpioTest:
+        return const GpioTestScreen();
       case DashboardTab.settings:
         return const SettingsScreen();
     }

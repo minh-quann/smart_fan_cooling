@@ -7,6 +7,7 @@ class WifiDeviceService implements DeviceService {
   final String _wsUrl;
   WebSocketChannel? _channel;
   final _statusController = StreamController<DeviceStatus>.broadcast();
+  final _rawJsonController = StreamController<Map<String, dynamic>>.broadcast();
   DeviceStatus _currentStatus = const DeviceStatus();
   
   StreamSubscription<dynamic>? _wsSub;
@@ -16,6 +17,9 @@ class WifiDeviceService implements DeviceService {
 
   @override
   Stream<DeviceStatus> get statusStream => _statusController.stream;
+
+  @override
+  Stream<Map<String, dynamic>> get rawJsonStream => _rawJsonController.stream;
 
   void _updateStatus({
     bool? connected,
@@ -61,6 +65,14 @@ class WifiDeviceService implements DeviceService {
               return;
             }
             
+            // Handle pin_test response
+            if (cmd == 'pin_test') {
+              if (!_rawJsonController.isClosed) {
+                _rawJsonController.add(data);
+              }
+              return;
+            }
+
             // Handle normal status updates
             _updateStatus(
               fanPercent: data['fan_pct'] as int?,
@@ -140,9 +152,15 @@ class WifiDeviceService implements DeviceService {
   }
 
   @override
+  Future<void> sendCommand(String cmd, dynamic value) async {
+    _sendJson({"cmd": cmd, "value": value});
+  }
+
+  @override
   void dispose() {
     _wsSub?.cancel();
     _channel?.sink.close();
     _statusController.close();
+    _rawJsonController.close();
   }
 }

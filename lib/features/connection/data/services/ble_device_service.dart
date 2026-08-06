@@ -7,6 +7,7 @@ import 'package:smart_fan_cooling/features/connection/data/services/device_servi
 class BleDeviceService implements DeviceService {
   final BluetoothDevice _device;
   final _statusController = StreamController<DeviceStatus>.broadcast();
+  final _rawJsonController = StreamController<Map<String, dynamic>>.broadcast();
   DeviceStatus _currentStatus = const DeviceStatus();
   
   StreamSubscription<BluetoothConnectionState>? _connectionSub;
@@ -27,6 +28,9 @@ class BleDeviceService implements DeviceService {
 
   @override
   Stream<DeviceStatus> get statusStream => _statusController.stream;
+
+  @override
+  Stream<Map<String, dynamic>> get rawJsonStream => _rawJsonController.stream;
 
   void _updateStatus({
     bool? connected,
@@ -187,10 +191,14 @@ class BleDeviceService implements DeviceService {
   }
 
   @override
+  Future<void> sendCommand(String cmd, dynamic value) async {}
+
+  @override
   void dispose() {
     _connectionSub?.cancel();
     _rpmSub?.cancel();
     _statusCharSub?.cancel();
     _statusController.close();
+    _rawJsonController.close();
   }
 }

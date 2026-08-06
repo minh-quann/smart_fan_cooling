@@ -12,6 +12,7 @@ class UsbSerialDeviceService implements DeviceService {
   SerialPort? _port;
   SerialPortReader? _reader;
   final _statusController = StreamController<DeviceStatus>.broadcast();
+  final _rawJsonController = StreamController<Map<String, dynamic>>.broadcast();
   DeviceStatus _currentStatus = const DeviceStatus();
 
   Timer? _pingTimer;
@@ -22,6 +23,9 @@ class UsbSerialDeviceService implements DeviceService {
 
   @override
   Stream<DeviceStatus> get statusStream => _statusController.stream;
+
+  @override
+  Stream<Map<String, dynamic>> get rawJsonStream => _rawJsonController.stream;
 
   void _updateStatus({
     bool? connected,
@@ -65,7 +69,7 @@ class UsbSerialDeviceService implements DeviceService {
       config.dispose();
 
       // Start reading
-      _reader = SerialPortReader(_port!, timeout: 100);
+      _reader = SerialPortReader(_port!, timeout: 1000);
       _reader!.stream.listen(
         (data) {
           _processIncomingData(data);
@@ -90,6 +94,14 @@ class UsbSerialDeviceService implements DeviceService {
       await Future.delayed(const Duration(milliseconds: 500));
       _updateStatus(connected: true);
     } catch (e) {
+      // Cleanup on failure — release the port so it can be retried
+      _pingTimer?.cancel();
+      _pingTimer = null;
+      _reader?.close();
+      _reader = null;
+      _port?.close();
+      _port?.dispose();
+      _port = null;
       _updateStatus(connected: false);
       rethrow;
     }
@@ -129,6 +141,12 @@ class UsbSerialDeviceService implements DeviceService {
       if (!_currentStatus.connected) {
         _updateStatus(connected: true);
       }
+      return;
+    }
+
+    // Forward pin_test and other raw responses
+    if (cmd == 'pin_test') {
+      _rawJsonController.add(data);
       return;
     }
 
@@ -220,11 +238,17 @@ class UsbSerialDeviceService implements DeviceService {
   }
 
   @override
+  Future<void> sendCommand(String cmd, dynamic value) async {
+    _sendJson({"cmd": cmd, if (value != null) "value": value});
+  }
+
+  @override
   void dispose() {
     _pingTimer?.cancel();
     _reader?.close();
     _port?.close();
     _statusController.close();
+    _rawJsonController.close();
   }
 
   /// Espressif USB VID for ESP32-S3 native USB

@@ -96,6 +96,18 @@ static void handleCommand(uint8_t clientNum, const char* payload) {
     _ipAddr = _apIp;
     ws.sendTXT(clientNum, "{\"cmd\":\"wifi_reset\",\"status\":\"ok\"}");
   }
+  else if (strcmp(cmd, "pin_test") == 0) {
+    int encA = digitalRead(PIN_ENC_A);
+    int encB = digitalRead(PIN_ENC_B);
+    int btnPsh = digitalRead(PIN_BTN_PSH);
+    int btnCon = digitalRead(PIN_BTN_CON);
+    int btnBak = digitalRead(PIN_BTN_BAK);
+    char resp[200];
+    snprintf(resp, sizeof(resp),
+      "{\"cmd\":\"pin_test\",\"enc_a\":%d,\"enc_b\":%d,\"btn_psh\":%d,\"btn_con\":%d,\"btn_bak\":%d}",
+      encA, encB, btnPsh, btnCon, btnBak);
+    ws.sendTXT(clientNum, resp);
+  }
 }
 
 // ---- WebSocket event handler ----

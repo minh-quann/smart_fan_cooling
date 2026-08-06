@@ -55,3 +55,28 @@ ButtonEvent checkButtons() {
 
   return BTN_NONE;
 }
+
+// ---- Encoder 2 (scroll wheel) ----
+static ESP32Encoder _encoder2;
+static int64_t _lastEnc2Count = 0;
+
+void initEncoder2() {
+  ESP32Encoder::useInternalWeakPullResistors = puType::up;
+  _encoder2.attachHalfQuad(PIN_ENC2_A, PIN_ENC2_B);
+  _encoder2.setCount(0);
+  _lastEnc2Count = 0;
+}
+
+int8_t getEncoder2Delta() {
+  int64_t current = _encoder2.getCount();
+  int64_t delta = current - _lastEnc2Count;
+  int8_t steps = (int8_t)(delta / 2);
+  if (steps != 0) {
+    _lastEnc2Count += steps * 2;
+  }
+  return steps;
+}
+
+int64_t getEncoder2Count() {
+  return _encoder2.getCount();
+}

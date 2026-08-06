@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
-enum DashboardTab { overview, fanCurve, rgbLighting, appProfile, systemInfo, settings }
+enum DashboardTab { overview, fanCurve, rgbLighting, appProfile, systemInfo, gpioTest, settings }
 
 class DesktopSidebar extends StatelessWidget {
   final DashboardTab currentTab;
@@ -107,6 +107,11 @@ class DesktopSidebar extends StatelessWidget {
             tab: DashboardTab.systemInfo,
             icon: Icons.memory_rounded,
             title: 'Thông Số Phần Cứng',
+          ),
+          _buildNavItem(
+            tab: DashboardTab.gpioTest,
+            icon: Icons.developer_board_rounded,
+            title: 'Test GPIO',
           ),
           _buildNavItem(
             tab: DashboardTab.settings,

@@ -1,5 +1,8 @@
 abstract class DeviceService {
   Stream<DeviceStatus> get statusStream;
+
+  /// Stream of raw JSON responses from the device (for pin_test, etc.)
+  Stream<Map<String, dynamic>> get rawJsonStream;
   
   Future<void> connect();
   Future<void> disconnect();
@@ -10,6 +13,9 @@ abstract class DeviceService {
   Future<void> setLedBrightness(int brightness);
   Future<void> sendTemperature(double cpu, double gpu);
   Future<WifiConfigResult> sendWifiConfig(String ssid, String password);
+
+  /// Send a raw command (for pin_test, etc.)
+  Future<void> sendCommand(String cmd, dynamic value);
   void dispose();
 }
 

@@ -53,6 +53,10 @@ void setup() {
   initUSBSerial();
   Serial.println("[OK] USB Serial service");
 
+  // Setup encoder 2 (scroll wheel) with interrupt
+  initEncoder2();
+  Serial.println("[OK] Enc2 (scroll wheel) GPIO 15/16 ready");
+
   // Default state: fan ON at 30%, LED rainbow
   setFanOn(true);
   setFanSpeed(30);
@@ -69,10 +73,13 @@ void loop() {
   loopUSBSerial();
   loopWiFiService();
 
-  // ---- 1. Read encoder for speed adjustment ----
-  int8_t encDelta = getEncoderDelta();
-  if (encDelta != 0) {
-    int16_t newSpeed = (int16_t)getFanPercent() + (encDelta * ENCODER_STEP);
+  // ---- 1. Read encoders for speed adjustment ----
+  int8_t encDelta1 = getEncoderDelta();
+  int8_t encDelta2 = getEncoder2Delta();
+  int8_t totalDelta = encDelta1 + encDelta2;
+
+  if (totalDelta != 0) {
+    int16_t newSpeed = (int16_t)getFanPercent() + (totalDelta * ENCODER_STEP);
     newSpeed = constrain(newSpeed, 0, 100);
     setFanSpeed((uint8_t)newSpeed);
     Serial.printf("Encoder: speed -> %d%%\n", newSpeed);

@@ -8,6 +8,7 @@ import 'package:smart_fan_cooling/features/connection/data/services/device_servi
 class WindowsBleDeviceService implements DeviceService {
   final String _deviceId;
   final _statusController = StreamController<DeviceStatus>.broadcast();
+  final _rawJsonController = StreamController<Map<String, dynamic>>.broadcast();
   DeviceStatus _currentStatus = const DeviceStatus();
 
   static const String _serviceUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
@@ -16,6 +17,9 @@ class WindowsBleDeviceService implements DeviceService {
 
   @override
   Stream<DeviceStatus> get statusStream => _statusController.stream;
+
+  @override
+  Stream<Map<String, dynamic>> get rawJsonStream => _rawJsonController.stream;
 
   void _updateStatus({
     bool? connected,
@@ -151,7 +155,11 @@ class WindowsBleDeviceService implements DeviceService {
   }
 
   @override
+  Future<void> sendCommand(String cmd, dynamic value) async {}
+
+  @override
   void dispose() {
     _statusController.close();
+    _rawJsonController.close();
   }
 }
