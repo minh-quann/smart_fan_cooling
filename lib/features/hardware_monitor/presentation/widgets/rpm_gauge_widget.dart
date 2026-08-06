@@ -179,7 +179,7 @@ class _GaugePainter extends CustomPainter {
     const startAngle = 135 * pi / 180;
     const sweepAngle = 270 * pi / 180;
 
-    // Solid track
+    // 1. Background Track Arc
     final bgPaint = Paint()
       ..color = AppColors.surfaceLight
       ..style = PaintingStyle.stroke
@@ -194,30 +194,77 @@ class _GaugePainter extends CustomPainter {
       bgPaint,
     );
 
-    // Active progress track - Sharp Electric Mint to Industrial Amber / Red on high speed
-    double progressRatio = (rpm / maxRpm).clamp(0.0, 1.0);
-    final activePaint = Paint()
-      ..shader = SweepGradient(
-        colors: const [
-          AppColors.primary,
-          AppColors.primary,
-          AppColors.accentOrange,
-          AppColors.accentRed,
-        ],
-        stops: const [0.0, 0.6, 0.85, 1.0],
-        transform: GradientRotation(startAngle),
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 10;
+    // 2. Decorative Outer Ticks (Precision Gauge Ticks)
+    final tickPaint = Paint()
+      ..color = AppColors.borderLight
+      ..strokeWidth = 1.5;
 
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle * progressRatio,
-      false,
-      activePaint,
-    );
+    const int totalTicks = 24;
+    for (int i = 0; i <= totalTicks; i++) {
+      final angle = startAngle + (sweepAngle * (i / totalTicks));
+      final innerP = Offset(
+        center.dx + (radius - 10) * cos(angle),
+        center.dy + (radius - 10) * sin(angle),
+      );
+      final outerP = Offset(
+        center.dx + (radius - 16) * cos(angle),
+        center.dy + (radius - 16) * sin(angle),
+      );
+      canvas.drawLine(innerP, outerP, tickPaint);
+    }
+
+    // 3. Active Progress Track - Electric Blue -> Frost Cyan -> Ice Neon Cyan
+    final double progressRatio = (rpm / maxRpm).clamp(0.0, 1.0);
+    if (progressRatio > 0) {
+      // Glow Layer
+      final glowPaint = Paint()
+        ..shader = SweepGradient(
+          colors: const [
+            AppColors.primary,
+            AppColors.secondary,
+            AppColors.accentCyan,
+            AppColors.accentSky,
+          ],
+          stops: const [0.0, 0.45, 0.8, 1.0],
+          transform: GradientRotation(startAngle),
+        ).createShader(Rect.fromCircle(center: center, radius: radius))
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 10
+        ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 4.0);
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle * progressRatio,
+        false,
+        glowPaint,
+      );
+
+      // Sharp Main Arc
+      final activePaint = Paint()
+        ..shader = SweepGradient(
+          colors: const [
+            AppColors.primary,
+            AppColors.secondary,
+            AppColors.accentCyan,
+            AppColors.accentSky,
+          ],
+          stops: const [0.0, 0.45, 0.8, 1.0],
+          transform: GradientRotation(startAngle),
+        ).createShader(Rect.fromCircle(center: center, radius: radius))
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 10;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle * progressRatio,
+        false,
+        activePaint,
+      );
+    }
   }
 
   @override

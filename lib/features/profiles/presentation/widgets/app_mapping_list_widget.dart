@@ -40,7 +40,7 @@ class AppMappingListWidget extends StatelessWidget {
                 ],
               ),
               AppButton(
-                label: '+ THÊM ỨNG DỤNG MỚI',
+                label: 'THÊM ỨNG DỤNG MỚI',
                 icon: Icons.add_rounded,
                 backgroundColor: AppColors.primary,
                 onPressed: onAddAppPressed,
@@ -55,9 +55,26 @@ class AppMappingListWidget extends StatelessWidget {
 
           if (mappings.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: const EdgeInsets.symmetric(vertical: 36),
               child: Center(
-                child: AppText.body('Chưa có ứng dụng nào được gán profile. Bấm "+ Thêm ứng dụng mới" để tạo mốc.'),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.auto_mode_rounded,
+                      size: 40,
+                      color: AppColors.textMuted,
+                    ),
+                    const SizedBox(height: 12),
+                    AppText.body(
+                      'Chưa có ứng dụng nào được gán profile.',
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: 4),
+                    AppText.caption(
+                      'Bấm "THÊM ỨNG DỤNG MỚI" ở góc phải để thêm quy tắc tự động chuyển đổi profile',
+                    ),
+                  ],
+                ),
               ),
             )
           else
@@ -74,28 +91,32 @@ class AppMappingListWidget extends StatelessWidget {
                 );
 
                 return Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: ShapeDecoration(
-                    color: AppColors.surfaceLight.withValues(alpha: 0.4),
+                    color: AppColors.surface,
                     shape: RoundedSuperellipseBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       side: const BorderSide(color: AppColors.border),
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 38,
+                        height: 38,
                         decoration: ShapeDecoration(
-                          color: profile.themeColor.withValues(alpha: 0.15),
+                          color: profile.themeColor.withValues(alpha: 0.12),
                           shape: RoundedSuperellipseBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: profile.themeColor.withValues(alpha: 0.25),
+                            ),
                           ),
                         ),
                         child: Icon(
                           _getAppIcon(mapping.iconPath),
                           color: profile.themeColor,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -105,49 +126,62 @@ class AppMappingListWidget extends StatelessWidget {
                           children: [
                             AppText(
                               mapping.appName,
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
                             ),
                             const SizedBox(height: 2),
                             AppText(
                               'File chạy: ${mapping.executableName}',
-                              fontSize: 12,
+                              fontSize: 11.5,
                               color: AppColors.textMuted,
                               isMonospace: true,
                             ),
                           ],
                         ),
                       ),
+
+                      // Clean Profile Status Tag
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: ShapeDecoration(
-                          color: profile.themeColor.withValues(alpha: 0.2),
+                          color: profile.themeColor.withValues(alpha: 0.12),
                           shape: RoundedSuperellipseBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: profile.themeColor, width: 1),
+                            borderRadius: BorderRadius.circular(6),
+                            side: BorderSide(color: profile.themeColor.withValues(alpha: 0.4)),
                           ),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(profile.icon, size: 14, color: profile.themeColor),
-                            const SizedBox(width: 6),
+                            Icon(profile.icon, size: 13, color: profile.themeColor),
+                            const SizedBox(width: 5),
                             AppText(
                               profile.name,
-                              fontSize: 12,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: profile.themeColor,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
+
+                      // Sleek Switch
                       Switch(
                         value: mapping.isEnabled,
-                        activeTrackColor: AppColors.primary,
+                        activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
+                        activeThumbColor: AppColors.primary,
+                        inactiveTrackColor: AppColors.surfaceLight,
+                        inactiveThumbColor: AppColors.textMuted,
+                        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
                         onChanged: (val) => onToggleMapping(mapping.id, val),
                       ),
+                      const SizedBox(width: 4),
+
                       IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.accentRed, size: 20),
+                        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.accentRed, size: 18),
+                        tooltip: 'Xóa quy tắc',
                         onPressed: () => onDeleteMapping(mapping.id),
                       ),
                     ],

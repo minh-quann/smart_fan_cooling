@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:smart_fan_cooling/core/theme/app_colors.dart';
 import 'package:smart_fan_cooling/shared/widgets/app_text.dart';
 
-enum DashboardTab { overview, fanCurve, rgbLighting, appProfile, systemInfo, settings }
+enum DashboardTab {
+  overview,
+  fanCurve,
+  rgbLighting,
+  appProfile,
+  systemInfo,
+  settings,
+}
 
 class DesktopSidebar extends StatelessWidget {
   final DashboardTab currentTab;
@@ -206,7 +213,9 @@ class DesktopSidebar extends StatelessWidget {
                   title,
                   fontSize: 12.5,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
