@@ -280,7 +280,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         _buildMetricPill(
                           'Tốc độ Clock:',
-                          '${hwState.stats.cpuClock} GHz',
+                          _formatClockFromMhz(hwState.stats.cpuClock * 1000),
                           AppColors.cpuColor,
                         ),
                         _buildMetricPill(
@@ -314,7 +314,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         _buildMetricPill(
                           'Xung nhịp GPU:',
-                          '${hwState.stats.gpuClock.toInt()} MHz',
+                          _formatClockFromMhz(hwState.stats.gpuClock),
                           AppColors.cpuColor,
                         ),
                         _buildMetricPill(
@@ -480,5 +480,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
+  }
+
+  String _formatClockFromMhz(double mhz) {
+    if (mhz < 1000) {
+      return '${mhz.round()} MHz';
+    } else {
+      final ghz = mhz / 1000.0;
+      return '${ghz.toStringAsFixed(2)} GHz';
+    }
   }
 }
