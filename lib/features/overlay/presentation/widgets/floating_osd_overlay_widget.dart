@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_fan_cooling/core/services/window_service.dart';
@@ -18,22 +19,45 @@ class FloatingOsdOverlayWidget extends StatefulWidget {
 }
 
 class _FloatingOsdOverlayWidgetState extends State<FloatingOsdOverlayWidget> {
-  bool _isInteractiveMoveMode = false;
+  StreamSubscription<bool>? _hotkeySub;
+  StreamSubscription<Map<String, double>>? _posSub;
 
   @override
   void initState() {
     super.initState();
+    WindowService.init();
+
     // Listen for global hotkey (Ctrl + Shift + O) pressed event
-    WindowService.onHotkeyPressed.listen((isInteractive) {
+    _hotkeySub = WindowService.onHotkeyPressed.listen((isUnlocked) {
       if (mounted) {
-        setState(() {
-          _isInteractiveMoveMode = isInteractive;
-        });
         context.read<OverlayBloc>().add(
-              ToggleOverlayLockEvent(!isInteractive),
+              ToggleOverlayLockEvent(!isUnlocked),
             );
       }
     });
+
+    // Listen for mouse drag position updates from native Win32 window
+    _posSub = WindowService.onPositionChanged.listen((pos) {
+      if (mounted) {
+        final currentConfig = context.read<OverlayBloc>().state.config;
+        context.read<OverlayBloc>().add(
+              UpdateOverlayConfigEvent(
+                currentConfig.copyWith(
+                  posX: pos['posX']!,
+                  posY: pos['posY']!,
+                  positionPreset: 'custom',
+                ),
+              ),
+            );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _hotkeySub?.cancel();
+    _posSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -49,7 +73,7 @@ class _FloatingOsdOverlayWidgetState extends State<FloatingOsdOverlayWidget> {
             // Transmit full telemetry & settings to Native Win32 Standalone OsdWindow
             WindowService.updateOsdData({
               'enabled': config.isEnabled,
-              'locked': config.isLocked && !_isInteractiveMoveMode,
+              'locked': config.isLocked,
               'opacity': config.backgroundOpacity,
               'style': config.style,
               'fontSizeScale': config.fontSizeScale,
@@ -91,7 +115,7 @@ class _FloatingOsdOverlayWidgetState extends State<FloatingOsdOverlayWidget> {
 
             // Handle Display Mode: 'always' vs 'game_only'
             if (config.displayMode == 'game_only') {
-              final bool isGameActive = stats.gpuUsage > 12 || stats.cpuUsage > 45 || _isInteractiveMoveMode;
+              final bool isGameActive = stats.gpuUsage > 12 || stats.cpuUsage > 45 || !config.isLocked;
               if (!isGameActive) {
                 WindowService.setAlwaysOnTop(false);
               } else {

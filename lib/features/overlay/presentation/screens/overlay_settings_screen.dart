@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_fan_cooling/core/services/window_service.dart';
@@ -22,46 +21,6 @@ class OverlaySettingsScreen extends StatefulWidget {
 
 class _OverlaySettingsScreenState extends State<OverlaySettingsScreen> {
   int _activeCategoryTab = 0; // 0: Basic, 1: CPU, 2: GPU, 3: RAM & Fan
-  bool _isDragUnlocked = false;
-  StreamSubscription<Map<String, double>>? _posSub;
-  StreamSubscription<bool>? _hotkeySub;
-
-  @override
-  void initState() {
-    super.initState();
-    WindowService.init();
-
-    // Listen to mouse drag position updates from native Win32 window
-    _posSub = WindowService.onPositionChanged.listen((pos) {
-      if (mounted) {
-        final currentConfig = context.read<OverlayBloc>().state.config;
-        _updateConfig(
-          context,
-          currentConfig.copyWith(
-            posX: pos['posX']!,
-            posY: pos['posY']!,
-            positionPreset: 'custom',
-          ),
-        );
-      }
-    });
-
-    // Listen to Ctrl+Shift+O hotkey toggles
-    _hotkeySub = WindowService.onHotkeyPressed.listen((isInteractive) {
-      if (mounted) {
-        setState(() {
-          _isDragUnlocked = isInteractive;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _posSub?.cancel();
-    _hotkeySub?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -254,48 +213,56 @@ class _OverlaySettingsScreenState extends State<OverlaySettingsScreen> {
                       const SizedBox(height: 8),
 
                       // Interactive Drag Unlock Button
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isDragUnlocked = !_isDragUnlocked;
-                          });
-                          WindowService.setClickThrough(!_isDragUnlocked);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: ShapeDecoration(
-                            color: _isDragUnlocked
-                                ? AppColors.primary.withValues(alpha: 0.15)
-                                : AppColors.surfaceLight,
-                            shape: RoundedSuperellipseBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: BorderSide(
-                                color: _isDragUnlocked ? AppColors.primary : AppColors.border,
-                                width: _isDragUnlocked ? 2 : 1,
+                      Builder(
+                        builder: (context) {
+                          final bool isUnlocked = !config.isLocked;
+                          return GestureDetector(
+                            onTap: () {
+                              final nextLockedState = !config.isLocked;
+                              context.read<OverlayBloc>().add(
+                                    ToggleOverlayLockEvent(nextLockedState),
+                                  );
+                              WindowService.setClickThrough(nextLockedState);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: ShapeDecoration(
+                                color: isUnlocked
+                                    ? AppColors.primary.withValues(alpha: 0.15)
+                                    : AppColors.surfaceLight,
+                                shape: RoundedSuperellipseBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(
+                                    color: isUnlocked ? AppColors.primary : AppColors.border,
+                                    width: isUnlocked ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isUnlocked ? Icons.open_with_rounded : Icons.lock_outline_rounded,
+                                    color: isUnlocked ? AppColors.primary : AppColors.textSecondary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: AppText(
+                                      isUnlocked
+                                          ? '❖ ĐANG MỞ KHÓA: KÉO CHUỘT TRÊN HUD ĐỂ DI CHUYỂN (NHẤN ĐỂ KHÓA LẠI)'
+                                          : '❖ BẤM VÀO ĐÂY ĐỂ MỞ KHÓA KÉO DI CHUYỂN HUD (HOẶC PHÍM Ctrl + Shift + O)',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: isUnlocked ? AppColors.primary : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _isDragUnlocked ? Icons.open_with_rounded : Icons.lock_outline_rounded,
-                                color: _isDragUnlocked ? AppColors.primary : AppColors.textSecondary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              AppText(
-                                _isDragUnlocked
-                                    ? '❖ ĐANG MỞ KHÓA: KÉO CHUỘT TRÊN HUD ĐỂ DI CHUYỂN (NHẤN ĐỂ KHÓA LẠI)'
-                                    : '❖ BẤM VÀO ĐÂY ĐỂ MỞ KHÓA KÉO DI CHUYỂN HUD (HOẶC PHÍM Ctrl + Shift + O)',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: _isDragUnlocked ? AppColors.primary : AppColors.textPrimary,
-                              ),
-                            ],
-                          ),
-                        ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 12),
 
@@ -381,10 +348,10 @@ class _OverlaySettingsScreenState extends State<OverlaySettingsScreen> {
                           thumbColor: Colors.white,
                         ),
                         child: Slider(
-                          value: config.backgroundOpacity,
-                          min: 0.1,
+                          value: config.backgroundOpacity.clamp(0.0, 1.0),
+                          min: 0.0,
                           max: 1.0,
-                          divisions: 18,
+                          divisions: 100,
                           onChanged: (val) {
                             _updateConfig(context, config.copyWith(backgroundOpacity: val));
                           },

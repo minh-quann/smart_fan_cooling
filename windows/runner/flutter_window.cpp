@@ -213,9 +213,10 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
         OsdWindow::GetInstance().ToggleLock();
 
         if (method_channel_) {
+          bool isUnlocked = !OsdWindow::GetInstance().IsLocked();
           method_channel_->InvokeMethod(
               "onHotkeyPressed",
-              std::make_unique<flutter::EncodableValue>(true));
+              std::make_unique<flutter::EncodableValue>(isUnlocked));
         }
       }
       break;

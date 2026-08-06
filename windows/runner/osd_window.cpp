@@ -164,9 +164,9 @@ void OsdWindow::UpdateData(const OsdData& data) {
     }
     if (data_.positionPreset != "custom") {
       ApplyPresetPosition(data_.positionPreset);
-    } else {
+    } else if (data_.locked) {
       SetWindowPos(hwnd_, HWND_TOPMOST, data_.posX, data_.posY, 0, 0,
-                   SWP_NOSIZE | (data_.locked ? SWP_NOACTIVATE : 0) | SWP_SHOWWINDOW);
+                   SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
     }
     InvalidateRect(hwnd_, NULL, FALSE);
   }
@@ -249,7 +249,8 @@ void OsdWindow::RenderOSD(HDC hdc) {
   HBITMAP oldBMP = (HBITMAP)SelectObject(memDC, memBMP);
 
   Graphics g(memDC);
-  g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+  g.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+  g.SetSmoothingMode(SmoothingModeAntiAlias);
   g.Clear(Color(0, 0, 0, 0));
 
   FontFamily fontFamily(L"Segoe UI");
@@ -287,8 +288,6 @@ void OsdWindow::RenderOSD(HDC hdc) {
   };
 
   wchar_t buf[256];
-  REAL curX = 10.0f;
-  REAL curY = 3.0f;
 
   auto measureWidth = [&](const wchar_t* text) -> REAL {
     RectF boundingBox;
@@ -296,153 +295,58 @@ void OsdWindow::RenderOSD(HDC hdc) {
     return boundingBox.Width;
   };
 
-  // If unlocked, draw prominent Drag Handle Icon [ ❖ MOVE ] on the left!
+  // Pass 1: Measure total width required for the HUD box
+  REAL calcX = 10.0f;
+
   if (!data_.locked) {
-    g.DrawString(L"❖ MOVE  ", -1, &font, PointF(curX, curY), &cyanBrush);
-    curX += measureWidth(L"❖ MOVE  ") + 4.0f;
-    g.DrawLine(&dividerPen, curX, curY + 2, curX, curY + fontSize + 1);
-    curX += 8.0f;
+    calcX += measureWidth(L"❖ MOVE  ") + 4.0f + 1.0f + 8.0f;
   }
 
   if (data_.style == "horizontal") {
-    // 1. FPS
     if (data_.showFps) {
-      g.DrawString(L"FPS ", -1, &font, PointF(curX, curY), &labelBrush);
-      curX += measureWidth(L"FPS ");
       swprintf_s(buf, L"%d", data_.fps);
-      g.DrawString(buf, -1, &font, PointF(curX, curY), getFpsBrush(data_.fps));
-      curX += measureWidth(buf) + 6.0f;
-
-      g.DrawLine(&dividerPen, curX, curY + 2, curX, curY + fontSize + 1);
-      curX += 8.0f;
+      calcX += measureWidth(L"FPS ") + measureWidth(buf) + 6.0f + 1.0f + 8.0f;
     }
 
-    // 2. CPU
     if (data_.showCpuTemp || data_.showCpuUsage || data_.showCpuPower || data_.showCpuClock || data_.showCpuFanRpm) {
-      g.DrawString(L"CPU ", -1, &font, PointF(curX, curY), &labelBrush);
-      curX += measureWidth(L"CPU ");
-
-      if (data_.showCpuTemp) {
-        swprintf_s(buf, L"%d \u00B0C", data_.cpuTemp);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), getTempBrush(data_.cpuTemp));
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showCpuUsage) {
-        swprintf_s(buf, L"%d %%", data_.cpuUsage);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), getUsageBrush(data_.cpuUsage));
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showCpuClock) {
-        swprintf_s(buf, L"%d MHz", data_.cpuClockMhz);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showCpuPower) {
-        swprintf_s(buf, L"%d W", data_.cpuPowerW);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showCpuFanRpm) {
-        swprintf_s(buf, L"%d RPM", data_.cpuFanRpm);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-
-      g.DrawLine(&dividerPen, curX, curY + 2, curX, curY + fontSize + 1);
-      curX += 8.0f;
+      calcX += measureWidth(L"CPU ");
+      if (data_.showCpuTemp) { swprintf_s(buf, L"%d \u00B0C", data_.cpuTemp); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showCpuUsage) { swprintf_s(buf, L"%d %%", data_.cpuUsage); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showCpuClock) { swprintf_s(buf, L"%d MHz", data_.cpuClockMhz); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showCpuPower) { swprintf_s(buf, L"%d W", data_.cpuPowerW); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showCpuFanRpm) { swprintf_s(buf, L"%d RPM", data_.cpuFanRpm); calcX += measureWidth(buf) + 6.0f; }
+      calcX += 1.0f + 8.0f;
     }
 
-    // 3. GPU
     if (data_.showGpuTemp || data_.showGpuUsage || data_.showGpuPower || data_.showGpuClock || data_.showGpuFanRpm) {
-      g.DrawString(L"GPU ", -1, &font, PointF(curX, curY), &labelBrush);
-      curX += measureWidth(L"GPU ");
-
-      if (data_.showGpuTemp) {
-        swprintf_s(buf, L"%d\u00B0C", data_.gpuTemp);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), getTempBrush(data_.gpuTemp));
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showGpuUsage) {
-        swprintf_s(buf, L"%d%%", data_.gpuUsage);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), getUsageBrush(data_.gpuUsage));
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showGpuClock) {
-        swprintf_s(buf, L"%dMHz", data_.gpuClockMhz);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showGpuPower) {
-        swprintf_s(buf, L"%dW", data_.gpuPowerW);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showGpuFanRpm) {
-        swprintf_s(buf, L"%dRPM", data_.gpuFanRpm);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-
-      g.DrawLine(&dividerPen, curX, curY + 2, curX, curY + fontSize + 1);
-      curX += 8.0f;
+      calcX += measureWidth(L"GPU ");
+      if (data_.showGpuTemp) { swprintf_s(buf, L"%d\u00B0C", data_.gpuTemp); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showGpuUsage) { swprintf_s(buf, L"%d%%", data_.gpuUsage); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showGpuClock) { swprintf_s(buf, L"%dMHz", data_.gpuClockMhz); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showGpuPower) { swprintf_s(buf, L"%dW", data_.gpuPowerW); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showGpuFanRpm) { swprintf_s(buf, L"%dRPM", data_.gpuFanRpm); calcX += measureWidth(buf) + 6.0f; }
+      calcX += 1.0f + 8.0f;
     }
 
-    // 4. RAM
     if (data_.showRamUsage) {
-      g.DrawString(L"RAM ", -1, &font, PointF(curX, curY), &labelBrush);
-      curX += measureWidth(L"RAM ");
       swprintf_s(buf, L"%d%%", data_.ramUsage);
-      g.DrawString(buf, -1, &font, PointF(curX, curY), getUsageBrush(data_.ramUsage));
-      curX += measureWidth(buf) + 6.0f;
-
-      g.DrawLine(&dividerPen, curX, curY + 2, curX, curY + fontSize + 1);
-      curX += 8.0f;
+      calcX += measureWidth(L"RAM ") + measureWidth(buf) + 6.0f + 1.0f + 8.0f;
     }
 
-    // 5. LLANO FAN
     if (data_.showSmartFanRpm || data_.showSmartFanPwm) {
-      g.DrawString(L"FAN ", -1, &font, PointF(curX, curY), &labelBrush);
-      curX += measureWidth(L"FAN ");
-      if (data_.showSmartFanPwm) {
-        swprintf_s(buf, L"%d%%", data_.fanPwm);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &cyanBrush);
-        curX += measureWidth(buf) + 6.0f;
-      }
-      if (data_.showSmartFanRpm) {
-        swprintf_s(buf, L"%d RPM", data_.fanRpm);
-        g.DrawString(buf, -1, &font, PointF(curX, curY), &greenBrush);
-        curX += measureWidth(buf) + 12.0f;
-      }
+      calcX += measureWidth(L"FAN ");
+      if (data_.showSmartFanPwm) { swprintf_s(buf, L"%d%%", data_.fanPwm); calcX += measureWidth(buf) + 6.0f; }
+      if (data_.showSmartFanRpm) { swprintf_s(buf, L"%d RPM", data_.fanRpm); calcX += measureWidth(buf) + 12.0f; }
     }
   } else {
-    // Upright / Stacked Multi-Line Style
-    int yPos = 6;
-    bool hasCpu = data_.showCpu || data_.showCpuTemp || data_.showCpuUsage || data_.showCpuPower || data_.showCpuClock || data_.showCpuFanRpm;
-    if (hasCpu) {
-      g.DrawString(L"CPU ", -1, &font, PointF(8, (REAL)yPos), &labelBrush);
-      swprintf_s(buf, L"%d MHz  %d %%  %d W  %d \u00B0C", data_.cpuClockMhz, data_.cpuUsage, data_.cpuPowerW, data_.cpuTemp);
-      g.DrawString(buf, -1, &font, PointF(48, (REAL)yPos), &cyanBrush);
-      yPos += 22;
-    }
-    bool hasGpu = data_.showGpu || data_.showGpuTemp || data_.showGpuUsage || data_.showGpuPower || data_.showGpuClock || data_.showGpuFanRpm;
-    if (hasGpu) {
-      g.DrawString(L"GPU ", -1, &font, PointF(8, (REAL)yPos), &labelBrush);
-      swprintf_s(buf, L"%d MHz  %d %%  %d W  %d \u00B0C", data_.gpuClockMhz, data_.gpuUsage, data_.gpuPowerW, data_.gpuTemp);
-      g.DrawString(buf, -1, &font, PointF(48, (REAL)yPos), &cyanBrush);
-      yPos += 22;
-    }
-    if (data_.showFps) {
-      g.DrawString(L"FPS ", -1, &font, PointF(8, (REAL)yPos), &labelBrush);
-      swprintf_s(buf, L"%d FPS", data_.fps);
-      g.DrawString(buf, -1, &font, PointF(48, (REAL)yPos), getFpsBrush(data_.fps));
-    }
-    curX = 420.0f;
+    calcX = 420.0f;
   }
 
-  INT actualWidth = static_cast<INT>(curX + 14.0f);
+  INT actualWidth = static_cast<INT>(calcX + 14.0f);
   lastRenderedWidth_ = actualWidth;
   lastRenderedHeight_ = targetHeight;
 
+  // Draw HUD background box
   BYTE bgAlpha = static_cast<BYTE>((data_.opacity * 255.0));
   Color bgColor(bgAlpha, 10, 14, 20);
   SolidBrush bgBrush(bgColor);
@@ -453,8 +357,9 @@ void OsdWindow::RenderOSD(HDC hdc) {
     g.DrawRectangle(&borderPen, 1, 1, actualWidth - 2, targetHeight - 2);
   }
 
-  // Re-render text on top of background
-  curX = 10.0f;
+  // Pass 2: Render Text & Dividers ONCE on top of the clean background
+  REAL curX = 10.0f;
+  REAL curY = 3.0f;
   if (!data_.locked) {
     g.DrawString(L"❖ MOVE  ", -1, &font, PointF(curX, curY), &cyanBrush);
     curX += measureWidth(L"❖ MOVE  ") + 4.0f;
@@ -558,8 +463,8 @@ void OsdWindow::RenderOSD(HDC hdc) {
     }
   }
 
-  SetWindowPos(hwnd_, HWND_TOPMOST, data_.posX, data_.posY, actualWidth, targetHeight,
-               SWP_NOACTIVATE | SWP_NOZORDER);
+  SetWindowPos(hwnd_, HWND_TOPMOST, 0, 0, actualWidth, targetHeight,
+               SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
 
   BitBlt(hdc, 0, 0, actualWidth, targetHeight, memDC, 0, 0, SRCCOPY);
 

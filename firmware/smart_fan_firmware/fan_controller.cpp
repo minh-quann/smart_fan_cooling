@@ -8,9 +8,7 @@ static bool _fanOn = false;
 static uint32_t _lastRpmCalc = 0;
 
 // Interrupt handler for tachometer pulses
-static void IRAM_ATTR tachISR() {
-  _tachCount++;
-}
+static void IRAM_ATTR tachISR() { _tachCount++; }
 
 void initFan() {
   // Setup PWM via LEDC (old API for Arduino Core 2.x compatibility)
@@ -26,7 +24,8 @@ void initFan() {
 }
 
 void setFanSpeed(uint8_t percent) {
-  if (percent > 100) percent = 100;
+  if (percent > 100)
+    percent = 100;
   _fanPercent = percent;
 
   if (_fanOn && percent > 0) {
@@ -46,17 +45,11 @@ void setFanOn(bool on) {
   }
 }
 
-bool isFanOn() {
-  return _fanOn;
-}
+bool isFanOn() { return _fanOn; }
 
-uint8_t getFanPercent() {
-  return _fanPercent;
-}
+uint8_t getFanPercent() { return _fanPercent; }
 
-uint16_t getFanRPM() {
-  return _rpm;
-}
+uint16_t getFanRPM() { return _rpm; }
 
 void updateRPM() {
   uint32_t now = millis();
