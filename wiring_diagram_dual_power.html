@@ -496,7 +496,7 @@
             <!-- TOP ROW -->
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🟢 DÃY CỌC TRÊN (TOP TERMINAL ROW):</p>
             <div class="pins-grid-44">
-              <div class="pin-box" data-pin="esp_gnd_top1" onclick="selectPin('esp_gnd_top1')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ LED GND</div><div class="pin-wire-info">Dây 17</div></div>
+              <div class="pin-box pin-unused" data-pin="esp_gnd_top1"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box" data-pin="esp_5vin" onclick="selectPin('esp_5vin')"><div class="pin-name"><span>5Vin</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">KHÔNG DÙNG</div><div class="pin-wire-info">ESP32 lấy nguồn USB</div></div>
               <div class="pin-box" data-pin="esp_g14" onclick="selectPin('esp_g14')"><div class="pin-name"><span>14</span><span class="terminal-dot" style="background:#10b981;"></span></div><div class="pin-target">➔ PSH Núm Xoay</div><div class="pin-wire-info">Dây 24</div></div>
               <div class="pin-box" data-pin="esp_g13" onclick="selectPin('esp_g13')"><div class="pin-name"><span>13</span><span class="terminal-dot" style="background:#8b5cf6;"></span></div><div class="pin-target">➔ BAK Đổi LED</div><div class="pin-wire-info">Dây 27</div></div>
@@ -533,7 +533,7 @@
             <!-- BOTTOM ROW -->
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">🔵 DÃY CỌC DƯỚI (BOTTOM TERMINAL ROW):</p>
             <div class="pins-grid-44">
-              <div class="pin-box" data-pin="esp_gnd2" onclick="selectPin('esp_gnd2')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ GND Chung (All)</div><div class="pin-wire-info">Dây 3,5,6,8,12,15,29,34</div></div>
+              <div class="pin-box" data-pin="esp_gnd2" onclick="selectPin('esp_gnd2')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ GND Chung (All)</div><div class="pin-wire-info">Dây 3,5,6,8,12,15,17,29,34</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g19"><div class="pin-name"><span>19</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g20"><div class="pin-name"><span>20</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g21"><div class="pin-name"><span>21</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
@@ -637,7 +637,7 @@
             </div>
             <div class="pins-grid">
               <div class="pin-box" data-pin="led_vcc" onclick="selectPin('led_vcc')"><div class="pin-name"><span>🟠 LED +5V</span> <span class="terminal-dot" style="background:#f97316;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ XY3606 OUT+</div><div class="pin-wire-info">Dây 16*: +5V từ XY3606 (không qua ESP32)</div></div>
-              <div class="pin-box" data-pin="led_gnd" onclick="selectPin('led_gnd')"><div class="pin-name"><span>⚫ LED GND</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GND</div><div class="pin-wire-info">Dây 17</div></div>
+              <div class="pin-box" data-pin="led_gnd" onclick="selectPin('led_gnd')"><div class="pin-name"><span>⚫ LED GND</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GND (Cọc Dưới)</div><div class="pin-wire-info">Dây 17</div></div>
               <div class="pin-box" data-pin="led_din" onclick="selectPin('led_din')"><div class="pin-name"><span>🩵 LED DIN</span> <span class="terminal-dot" style="background:#06b6d4;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ ESP32 GPIO 7</div><div class="pin-wire-info">Dây 18</div></div>
             </div>
           </div>
@@ -926,7 +926,7 @@
       { id: 14, diagram: 1, wire: "Dây 14: Xung RPM 3.3V", fromPin: "opto_out", toPin: "esp_g5", type: "pwm", desc: "Xung đếm vòng quay RPM" },
       { id: 15, diagram: 1, wire: "Dây 15: GND Opto Out", fromPin: "esp_gnd2", toPin: "opto_gnd", type: "gnd", desc: "Tiếp địa đầu ra Opto" },
       { id: 16, diagram: 1, wire: "Dây 16*: +5V LED từ XY3606 (KHÔNG qua ESP32)", fromPin: "xy_out_p", toPin: "led_vcc", type: "5v", desc: "⚠️ KHÁC BẢN GỐC: LED lấy 5V trực tiếp từ XY3606 OUT+" },
-      { id: 17, diagram: 1, wire: "Dây 17: GND LED", fromPin: "esp_gnd_top1", toPin: "led_gnd", type: "gnd", desc: "Tiếp địa LED RGB" },
+      { id: 17, diagram: 1, wire: "Dây 17: GND LED", fromPin: "esp_gnd2", toPin: "led_gnd", type: "gnd", desc: "Tiếp địa LED RGB WS2812B nối vào cọc GND chung ở dãy cọc dưới bo đế ESP32" },
       { id: 18, diagram: 1, wire: "Dây 18: DIN Data LED", fromPin: "esp_g7", toPin: "led_din", type: "pwm", desc: "Tín hiệu điều khiển FastLED từ ESP32" },
       { id: 19, diagram: 1, wire: "Dây 19: 3.3V Màn 1.3\" (Cọc 3V3 thứ 2 ngoài đế)", fromPin: "esp_3v3_b", toPin: "o1_vcc", type: "3v3", desc: "Nguồn 3.3V từ cọc 3V3 thứ 2 của ESP32 nuôi Màn 1.3\" ngoài hộp đế" },
       { id: 20, diagram: 1, wire: "Dây 20: GND Màn 1.3\"", fromPin: "esp_gnd4", toPin: "o1_gnd", type: "gnd", desc: "Tiếp địa Màn 1.3\"" },

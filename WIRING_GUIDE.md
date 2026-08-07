@@ -90,8 +90,8 @@ flowchart TB
         V5_IN["🔴 5Vin (Nhận 5.2V từ XY3606)"]
         
         subgraph GND_GROUP["⚫ CỌC GND VẬT LÝ TRÊN BO"]
-            GND_1["GND 1 (Trái Trên) — Dùng cho LED RGB"]
-            GND_2["GND 2 (Trái Dưới 1) — Dùng cho Nguồn XY3606 & MOSFET"]
+            GND_1["GND 1 (Trái Trên) — Dự phòng"]
+            GND_2["GND 2 (Trái Dưới 1) — GND Chung (Nguồn XY3606, MOSFET, LED RGB...)"]
             GND_3["GND 3 (Trái Dưới 2) — Dùng cho Opto PC817"]
             GND_4["GND 4 (Phải Dưới) — Dùng cho Màn OLED 1.3'"]
         end
@@ -174,7 +174,7 @@ flowchart TB
     GND_3 -- "⚫ Dây 15: GND Opto Out" --> OPTO_GND
 
     V5_IN -- "🟠 Dây 16: +5V LED" --> LED_VCC
-    GND_1 -- "⚫ Dây 17: GND LED" --> LED_GND
+    GND_2 -- "⚫ Dây 17: GND LED" --> LED_GND
     GPIO7 -- "🩵 Dây 18: DIN FastLED" --> LED_DIN
 
     V33 -- "🟡 Dây 19: 3.3V Màn 1.3'" --> O1_VCC
